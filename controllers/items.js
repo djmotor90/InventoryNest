@@ -10,8 +10,28 @@ items.get('/',(req,res) => {
 items.get('/:id',(req,res) => {
     // show each individual items
     
-    
 });
+items.get('/:edit', (req, res) => {
+
+});
+
+
+//BASIC CRUD applications
+items.post('/', (req, res) => {
+
+});
+items.get('/new', (req, res) => {
+
+});
+items.post('/new', (req, res) => {
+
+});
+
+items.post('/new', (req, res) => {
+
+});
+
+
 
 
 
