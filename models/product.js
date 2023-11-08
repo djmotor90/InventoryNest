@@ -17,7 +17,7 @@ module.exports = (sequelize, DataTypes) => {
     product_id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
     product_name: DataTypes.STRING,
     product_description: DataTypes.STRING,
-    product_category: {type: DataTypes.ENUM, values: ['electronics', 'furniture', 'clothing','office supplies','toiletries', 'home improvement']},
+    product_category: {type: DataTypes.ENUM, values: ['Electronics', 'Clothing', 'Furniture','Books','Toys', 'Kitchen Appliances', 'Beauty Products','Sports Equipment', 'Home Decor', 'Tools']},
     product_weight: DataTypes.FLOAT,
     product_provider_price: DataTypes.FLOAT,
     product_sale_price: DataTypes.FLOAT,
