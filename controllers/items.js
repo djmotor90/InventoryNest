@@ -8,17 +8,17 @@ items.get('/',(req,res) => {
 });
 
 items.get('/:id',(req,res) => {
-    // show each individual items
+    // show each individual items information
     
 });
 items.get('/:edit', (req, res) => {
-
+    // show a table for editing information
 });
 
 
 //BASIC CRUD applications
 items.post('/', (req, res) => {
-
+    //adding an entry 
 });
 items.get('/new', (req, res) => {
 

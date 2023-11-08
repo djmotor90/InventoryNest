@@ -1,10 +1,9 @@
-//DEPENDENCIES
-const express = require('express');
+// DEPENDENCIES
+const express       = require('express');
+const app           = express();
+const { Sequelize } = require('sequelize');
 
-
-const app = express();
-
-//CONFIGURATION
+// CONFIGURATION / MIDDLEWARE
 require('dotenv').config();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -14,42 +13,28 @@ app.use(express.urlencoded({ extended: false }));
 //Routes
 app.get('/', (req, res) => {
     //entry page, show information about the app itself
+    //what is needed here from the backend
+    // lets have a landing page that displays number of warehouses active
+    // number of total sales
+    // revenue chart
+    //most recent sale
 });
 
-//Break this out into "tables" that it would make sense for the company director to look at 
-
-// USERS controller
-//table of all your users
-//  -add, delete, update, query users
-// FE thing have an individual page
-//TODO user picture
-
-// Items controller
-//table of all your items
-//  -add, delete, update, query items 
-// FE thing have an individual page
-//TODO item picture 
-
-// warehouses controller
-//table of all your warehouses
-//  -add, delete, update, query warehouses
-// FE thing have an individual page
-// indivdual warehosue we point to a real address and have map functionality
-
-
-//Reporting controller
-// see sales history
-// track hot/cold items
-// total sales tracker
-
-//Dynamic Routes 
+//DYNAMIC ROUTES 
 app.use('/users', require('./controllers/users.js'));
 app.use('/items', require('./controllers/items.js'));
 app.use('/warehouses', require('./controllers/warehouses.js'));
 app.use('/reporting', require('./controllers/reporting.js'));
 
 
-//Catchall Route
+//CATCHALL ROUTE
 app.get('*', (req,res) => {
-    res.status(404).send('<h1> 404 Page not Found </h1>');
-})
+    response.status(404).json({message: 'Page not found'});
+});
+
+
+
+// LISTEN
+app.listen(process.env.PORT, () => {
+    console.log(`Inventory Nest backend running on port ${process.env.PORT}`);
+});
