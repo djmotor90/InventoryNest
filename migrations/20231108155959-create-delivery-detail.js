@@ -17,6 +17,11 @@ module.exports = {
         allowNull: false,
         type: Sequelize.INTEGER
       },
+      //TODO this may make more sense to be an warehouse id, havent decided yet
+      inventory_id:{
+        allowNull:false,
+        type: Sequelize.INTEGER
+      },
       quantity: {
         allowNull: false,
         type: Sequelize.INTEGER

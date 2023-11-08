@@ -21,18 +21,20 @@ products.get('/', async (req,res) => {
             }
         });
         res.status(200).json(foundProducts);
-    } catch (error) {
+    } catch (err) {
         res.status(500).json(err);
     };
 });
 //Post a new entry to the database
 products.post('/', async (req, res) => {
     //adding an entry 
+    //here you should do backend validation
+
 });
 
 //Creation Route: simply needs to send over the appropriate fields and any field constraints
 products.get('/new', async (req, res) => {
-
+    
 });
 
 
@@ -52,22 +54,35 @@ products.get('/:id', async (req,res) => {
         //these should be their own individual trycatches, even if they fail some data should be sent over
         //Todo: lets also go through the delivery detail and decide if its a hot or cold item
         //Todo: lets go and get the picture and send over a 64bit version
+        //Note: i can do this with an AWS bucket and can easily add/edit them too, kim im not sure how you want to do this 
         res.status(200).json(foundProduct)
     } catch (err) {
         res.status(500).json(err)
     }
 });
-products.get('/edit', (req, res) => {
-    // show a table for editing information
+products.put('/:id', async(req,res) => {
+    //update the entry 
+    //here you should do backend validation 
+});
+products.delete('/:id', async(req,res) => {
+    try {
+        //TODO: it may be better in the future to not delete it, but maybe move it to a history database so, if you please, you can still do analytics on it
+        // in fact this will actually just straight up be needed
+        const deletedProduct = await Product.destroy({
+            where: {product_id: req.params.id}
+        });
+        //TODO you will have to query through inventory and delete those as well
+        const deletedInventory = await Inventory.destroy({
+            where: {product_id: req.params.id}
+        })
+        res.status(200).json({
+            message: `successfully deleted ${deletedProduct} band(s), and deleted all associated inventories: ${deletedInventory}`
+        });
+    } catch (err) {
+        res.status(500).json(err);  
+    }
 });
 
-
-
-
-
-products.post('/new', (req, res) => {
-
-});
 
 module.exports = products;
 

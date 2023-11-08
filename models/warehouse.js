@@ -9,13 +9,22 @@ module.exports = (sequelize, DataTypes) => {
      * This method is not a part of Sequelize lifecycle.
      * The `models/index` file will call this method automatically.
      */
-    static associate({ Inventory }) {
+    static associate({ Inventory, Transfer }) {
       //Every warehouse has multiple inventories
-      Warehouse.hasMany(Inventory,{
+      Warehouse.hasMany(Inventory, {
         foreignKey:'warehouse_id',
-        as:"warehouse"
-      })
-      
+        as:"inventories"
+      });
+      //each warehouse has multiple transfers to
+      Warehouse.hasMany(Transfer, {
+        foreignKey:'new_warehouse_id',
+        as:"transfers_to"
+      });
+      //each warehouse has multiple transfers from
+      Warehouse.hasMany(Transfer, {
+        foreignKey:'original_warehouse_id',
+        as:"transfers_from"
+      });
     }
   }
   Warehouse.init({

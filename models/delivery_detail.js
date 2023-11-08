@@ -17,6 +17,7 @@ module.exports = (sequelize, DataTypes) => {
     delivery_detail_id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
     delivery_id: DataTypes.INTEGER,
     product_id: DataTypes.INTEGER,
+    inventory_id: DataTypes.INTEGER,
     quantity: DataTypes.INTEGER,
     total_price: DataTypes.FLOAT
   }, {
