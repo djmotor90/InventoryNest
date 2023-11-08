@@ -10,10 +10,13 @@ const { Product, Inventory, Warehouse } = db;
 //Home route: simply needs to send over all table data to populate a table
 products.get('/', async (req,res) => {
     // Show a table of all products, therefore need to send over all the data
-        //each table row will be alink, that will feed in the id 
+        //each table row will be a link, that will feed in the id 
     // needed associations: none afaik 
     //there will be querying functionality and sorting functionality
     try {
+        //search through the queries and find those which match a column name from the 
+        //const columnNames = await Product.rawAttributes;
+
         //you will eventually have to rewrite out the where here dynamically
         const foundProducts = await Product.findAll({
             where: {

@@ -2,6 +2,8 @@
 const express       = require('express');
 const app           = express();
 const { Sequelize } = require('sequelize');
+//database connection required on the landing page
+const db            = require('../models');
 //Annie Note: im assuming youre using this kim to get it going on your server
 const port = 3001;
 
@@ -12,6 +14,8 @@ app.use(express.urlencoded({ extended: false }));
 
 
 
+
+
 //Routes
 app.get('/', (req, res) => {
     //entry page, show information about the app itself
@@ -19,7 +23,7 @@ app.get('/', (req, res) => {
     // lets have a landing page that displays number of warehouses active
     // number of total sales
     // revenue chart
-    //most recent sale
+    // most recent sale
     res.send('Hello World!');
 });
 

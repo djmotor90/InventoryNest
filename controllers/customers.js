@@ -5,4 +5,9 @@ const db            = require('../models');
 const { Customer } = db;
 const { Op }        = require('sequelize');
 
+
+
+
+
+
 module.exports = customers;
