@@ -1,8 +1,8 @@
 //DEPENDENCIES
-const warehouses    = require('express').Router();
+const customers    = require('express').Router();
 const { response }  = require('express');
 const db            = require('../models');
-const { Warehouse } = db;
+const { Customer } = db;
 const { Op }        = require('sequelize');
 
-module.exports = warehouses;
+module.exports = customers;

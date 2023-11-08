@@ -2,6 +2,7 @@
 const express       = require('express');
 const app           = express();
 const { Sequelize } = require('sequelize');
+//Annie Note: im assuming youre using this kim to get it going on your server
 const port = 3001;
 
 // CONFIGURATION / MIDDLEWARE
@@ -23,11 +24,12 @@ app.get('/', (req, res) => {
 });
 
 //DYNAMIC ROUTES 
-/*app.use('/users', require('./controllers/users.js'));
-app.use('/items', require('./controllers/items.js'));
+
+app.use('/products', require('./controllers/products.js'));
+app.use('/customers', require('./controllers/customers.js'));
 app.use('/warehouses', require('./controllers/warehouses.js'));
-app.use('/reporting', require('./controllers/reporting.js'));
-*/
+app.use('/reporting', require('./controllers/reporting.js'))
+
 
 //CATCHALL ROUTE
 app.get('*', (req,res) => {
@@ -39,4 +41,4 @@ app.get('*', (req,res) => {
 // LISTEN
 app.listen(port, () => {
     console.log(`InventoryNest app listening at http://localhost:${port}`);
-  });
+});
