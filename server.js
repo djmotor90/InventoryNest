@@ -21,11 +21,11 @@ app.get('/', (req, res) => {
 });
 
 //DYNAMIC ROUTES 
-app.use('/users', require('./controllers/users.js'));
+/*app.use('/users', require('./controllers/users.js'));
 app.use('/items', require('./controllers/items.js'));
 app.use('/warehouses', require('./controllers/warehouses.js'));
 app.use('/reporting', require('./controllers/reporting.js'));
-
+*/
 
 //CATCHALL ROUTE
 app.get('*', (req,res) => {

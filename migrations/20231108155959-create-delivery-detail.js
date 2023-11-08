@@ -11,11 +11,11 @@ module.exports = {
       },
       delivery_id: {
         allowNull: false,
-        type: Sequelize.STRING
+        type: Sequelize.INTEGER
       },
       product_id: {
         allowNull: false,
-        type: Sequelize.STRING
+        type: Sequelize.INTEGER
       },
       quantity: {
         allowNull: false,

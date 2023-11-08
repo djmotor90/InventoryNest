@@ -15,7 +15,7 @@ module.exports = (sequelize, DataTypes) => {
   }
   Delivery.init({
     delivery_id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-    customer_id: DataTypes.STRING,
+    customer_id: DataTypes.INTEGER,
     delivery_date: DataTypes.DATE
   }, {
     sequelize,

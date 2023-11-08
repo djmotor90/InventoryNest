@@ -15,8 +15,8 @@ module.exports = (sequelize, DataTypes) => {
   }
   Delivery_Detail.init({
     delivery_detail_id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-    delivery_id: DataTypes.STRING,
-    product_id: DataTypes.STRING,
+    delivery_id: DataTypes.INTEGER,
+    product_id: DataTypes.INTEGER,
     quantity: DataTypes.INTEGER,
     total_price: DataTypes.FLOAT
   }, {

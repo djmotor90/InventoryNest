@@ -11,7 +11,7 @@ module.exports = {
       },
       customer_id: {
         allowNull: false,
-        type: Sequelize.STRING
+        type: Sequelize.INTEGER
       },
       delivery_date: {
         allowNull: false,
