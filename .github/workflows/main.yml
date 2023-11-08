@@ -1,0 +1,33 @@
+name: Deploy Express App
+
+# Controls when the action will run.
+on:
+  # Triggers the workflow on push events but only for the main branch
+  push:
+    branches: [ main ]
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "deploy"
+  deploy:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+    - name: Deploy using ssh
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        port: 22
+        script: |
+          sudo apt-get update
+          sudo apt-get install -y nodejs npm
+          sudo npm install -g pm2
+          cd InventoryNest
+          git pull origin main
+          git status
+          npm install --only=prod
+          pm2 reload InventoryNest || pm2 start server.js --name InventoryNest --watch --port 3001
