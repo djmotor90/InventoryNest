@@ -3,9 +3,11 @@ const products     = require('express').Router();
 const { response } = require('express');
 const db           = require('../models');
 const { Op }       = require('sequelize');
-const { Product}   = db;
+const { Product, Inventory, Warehouse } = db;
 
 
+//STATIC ROUTES
+//Home route: simply needs to send over all table data to populate a table
 products.get('/', async (req,res) => {
     // Show a table of all products, therefore need to send over all the data
         //each table row will be alink, that will feed in the id 
@@ -23,42 +25,45 @@ products.get('/', async (req,res) => {
         res.status(500).json(err);
     };
 });
+//Post a new entry to the database
+products.post('/', async (req, res) => {
+    //adding an entry 
+});
 
+//Creation Route: simply needs to send over the appropriate fields and any field constraints
+products.get('/new', async (req, res) => {
+
+});
+
+
+
+//Singular Product form: needs to show all product information 
 products.get('/:id', async (req,res) => {
     try {
-        const foundProduct = await Band.findOne({
-            where: {product_id: req.params.product_id},
+        //provide every warehouse as well that it is located in and the amount
+        const foundProduct = await Product.findOne({
+            where: {product_id: req.params.id},
             include:[
-                {model: Meet_Greet, as: "meet_greets", include: {
-                    model: Event, as: "event",
-                    where: {name: { [Op.like] : `%${req.query.event ? req.query.event : ''}%`}}
-                }},
-                {model: Set_Time, as: "set_times", include: {
-                    model: Event, as: "event",
-                    where: {name: { [Op.like] : `%${req.query.event ? req.query.event : ''}%`}}
+                {model: Inventory, as: "inventories", include: {
+                    model: Warehouse, as: "warehouse",
                 }},
             ]
         });
-        res.status(200).json(foundBand)
+        //these should be their own individual trycatches, even if they fail some data should be sent over
+        //Todo: lets also go through the delivery detail and decide if its a hot or cold item
+        //Todo: lets go and get the picture and send over a 64bit version
+        res.status(200).json(foundProduct)
     } catch (err) {
         res.status(500).json(err)
     }
 });
-products.get('/:edit', (req, res) => {
+products.get('/edit', (req, res) => {
     // show a table for editing information
 });
 
 
-//BASIC CRUD applications
-products.post('/', (req, res) => {
-    //adding an entry 
-});
-products.get('/new', (req, res) => {
 
-});
-products.post('/new', (req, res) => {
 
-});
 
 products.post('/new', (req, res) => {
 

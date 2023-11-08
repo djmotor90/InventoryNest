@@ -9,8 +9,13 @@ module.exports = (sequelize, DataTypes) => {
      * This method is not a part of Sequelize lifecycle.
      * The `models/index` file will call this method automatically.
      */
-    static associate(models) {
-      // define association here
+    static associate({ Inventory }) {
+      //Every warehouse has multiple inventories
+      Warehouse.hasMany(Inventory,{
+        foreignKey:'warehouse_id',
+        as:"warehouse"
+      })
+      
     }
   }
   Warehouse.init({
