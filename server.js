@@ -2,6 +2,7 @@
 const express       = require('express');
 const app           = express();
 const { Sequelize } = require('sequelize');
+const port = 3001;
 
 // CONFIGURATION / MIDDLEWARE
 require('dotenv').config();
@@ -18,6 +19,7 @@ app.get('/', (req, res) => {
     // number of total sales
     // revenue chart
     //most recent sale
+    res.send('Hello World!');
 });
 
 //DYNAMIC ROUTES 
@@ -35,6 +37,6 @@ app.get('*', (req,res) => {
 
 
 // LISTEN
-app.listen(process.env.PORT, () => {
-    console.log(`Inventory Nest backend running on port ${process.env.PORT}`);
-});
+app.listen(port, () => {
+    console.log(`InventoryNest app listening at http://localhost:${port}`);
+  });
