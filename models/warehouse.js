@@ -14,17 +14,17 @@ module.exports = (sequelize, DataTypes) => {
       Warehouse.hasMany(Inventory, {
         foreignKey:'warehouse_id',
         as:"inventories"
-      });
+      }),
       //each warehouse has multiple transfers to
       Warehouse.hasMany(Transfer, {
         foreignKey:'new_warehouse_id',
         as:"transfers_to"
-      });
+      }),
       //each warehouse has multiple transfers from
       Warehouse.hasMany(Transfer, {
         foreignKey:'original_warehouse_id',
         as:"transfers_from"
-      });
+      })
     }
   }
   Warehouse.init({

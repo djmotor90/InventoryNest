@@ -9,8 +9,22 @@ module.exports = (sequelize, DataTypes) => {
      * This method is not a part of Sequelize lifecycle.
      * The `models/index` file will call this method automatically.
      */
-    static associate(models) {
-      // define association here
+    static associate({Warehouse, Product}) {
+      // every transfer has one to warehouse
+      Transfer.belongsTo(Warehouse,{
+        foreignKey:'new_warehouse_id',
+        as:"warehouse_to"
+      }),
+      //every transfer has one from warehouse
+      Transfer.belongsTo(Warehouse,{
+        foreignKey:'original_warehouse_id',
+        as:"warehouse_from"
+      }),
+      //every transfer has one product
+      Transfer.belongsTo(Product,{
+        foreignKey:'product_id',
+        as:"product"
+      })
     }
   }
   Transfer.init({
