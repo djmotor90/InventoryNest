@@ -17,7 +17,8 @@ module.exports = (sequelize, DataTypes) => {
     inventory_id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
     warehouse_id: DataTypes.INTEGER,
     product_id: DataTypes.INTEGER,
-    minimum_stock_level: DataTypes.INTEGER
+    minimum_stock_level: DataTypes.INTEGER,
+    current_stock_level: DataTypes.INTEGER
   }, {
     sequelize,
     modelName: 'Inventory',

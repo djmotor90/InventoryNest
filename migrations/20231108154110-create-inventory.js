@@ -20,6 +20,10 @@ module.exports = {
       minimum_stock_level: {
         type: Sequelize.INTEGER
       },
+      current_stock_level:{
+        allowNull: false,
+        type: Sequelize.INTEGER
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE

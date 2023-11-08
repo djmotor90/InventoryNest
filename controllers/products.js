@@ -24,9 +24,25 @@ products.get('/', async (req,res) => {
     };
 });
 
-products.get('/:id',(req,res) => {
-    // show each individual products information
-    
+products.get('/:id', async (req,res) => {
+    try {
+        const foundProduct = await Band.findOne({
+            where: {product_id: req.params.product_id},
+            include:[
+                {model: Meet_Greet, as: "meet_greets", include: {
+                    model: Event, as: "event",
+                    where: {name: { [Op.like] : `%${req.query.event ? req.query.event : ''}%`}}
+                }},
+                {model: Set_Time, as: "set_times", include: {
+                    model: Event, as: "event",
+                    where: {name: { [Op.like] : `%${req.query.event ? req.query.event : ''}%`}}
+                }},
+            ]
+        });
+        res.status(200).json(foundBand)
+    } catch (err) {
+        res.status(500).json(err)
+    }
 });
 products.get('/:edit', (req, res) => {
     // show a table for editing information
