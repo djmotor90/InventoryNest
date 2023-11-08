@@ -11,11 +11,11 @@ module.exports = {
       },
       warehouse_id: {
         allowNull: false,
-        type: Sequelize.STRING
+        type: Sequelize.INTEGER
       },
       product_id: {
         allowNull: false,
-        type: Sequelize.STRING
+        type: Sequelize.INTEGER
       },
       minimum_stock_level: {
         type: Sequelize.INTEGER

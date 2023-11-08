@@ -14,9 +14,9 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   Inventory.init({
-    inventroy_id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-    warehouse_id: DataTypes.STRING,
-    product_id: DataTypes.STRING,
+    inventory_id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+    warehouse_id: DataTypes.INTEGER,
+    product_id: DataTypes.INTEGER,
     minimum_stock_level: DataTypes.INTEGER
   }, {
     sequelize,
