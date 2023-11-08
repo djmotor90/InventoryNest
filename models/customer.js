@@ -3,7 +3,7 @@ const {
   Model
 } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
-  class Warehouse extends Model {
+  class Customer extends Model {
     /**
      * Helper method for defining associations.
      * This method is not a part of Sequelize lifecycle.
@@ -13,12 +13,14 @@ module.exports = (sequelize, DataTypes) => {
       // define association here
     }
   }
-  Warehouse.init({
-    warehouse_id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-    warehouse_name: DataTypes.STRING,
-    warehouse_address: DataTypes.STRING,
-    warehouse_city: DataTypes.STRING,
-    warehouse_state: {type: DataTypes.ENUM, values: ['AK',
+  Customer.init({
+    customer_id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+    customer_first_name: DataTypes.STRING,
+    customer_last_name: DataTypes.STRING,
+    customer_purchase_count: DataTypes.INTEGER,
+    customer_address: DataTypes.STRING,
+    customer_city: DataTypes.STRING,
+    customer_state: {type: DataTypes.ENUM, values: ['AK',
     'AL',
     'AR',
     'AZ',
@@ -70,11 +72,11 @@ module.exports = (sequelize, DataTypes) => {
     'WI',
     'WY'
     ]},
-    warehouse_zipcode: DataTypes.INTEGER,
-    warehouse_capacity: DataTypes.FLOAT
+    customer_zipcode: DataTypes.INTEGER,
+    customer_picture_filename: DataTypes.STRING
   }, {
     sequelize,
-    modelName: 'Warehouse',
+    modelName: 'Customer',
   });
-  return Warehouse;
+  return Customer;
 };
