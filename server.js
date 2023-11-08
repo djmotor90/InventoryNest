@@ -3,7 +3,7 @@ const express       = require('express');
 const app           = express();
 const { Sequelize } = require('sequelize');
 //database connection required on the landing page
-const db            = require('../models');
+const db            = require('./models');
 //Annie Note: im assuming youre using this kim to get it going on your server
 const port = 3001;
 

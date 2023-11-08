@@ -16,7 +16,7 @@ products.get('/', async (req,res) => {
     try {
         //search through the queries and find those which match a column name from the 
         //const columnNames = await Product.rawAttributes;
-
+        
         //you will eventually have to rewrite out the where here dynamically
         const foundProducts = await Product.findAll({
             where: {
