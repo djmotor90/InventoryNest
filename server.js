@@ -87,14 +87,8 @@ app.get('/', async (req, res) => {
         }
         res.status(200).json(landingPageData);
     } catch (error) {
-        
+        res.status(500).json(err);
     }
-    //entry page, show information about the app itself
-    //what is needed here from the backend
-    // lets have a landing page that displays number of warehouses active
-    // number of total sales
-    // revenue chart
-    // most recent sale
 });
 //DYNAMIC ROUTES 
 
