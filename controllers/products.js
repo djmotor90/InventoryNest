@@ -15,13 +15,19 @@ products.get('/', async (req,res) => {
     //there will be querying functionality and sorting functionality
     try {
         //search through the queries and find those which match a column name from the 
-        //const columnNames = await Product.rawAttributes;
+        const columnNames = Object.keys(Product.rawAttributes);
+        let whereObject = {};
+        for (let i=0; i< Object.keys(req.query).length; i++)
+        {
+            if (columnNames.includes(Object.keys(req.query)[i]))
+            {
+                whereObject[Object.keys(req.query)[i]] = req.query(Object.keys(req.query)[i]);
+            };
+        };
         
         //you will eventually have to rewrite out the where here dynamically
         const foundProducts = await Product.findAll({
-            where: {
-                product_name: { [Op.like]: `%${req.query.product_name ? req.query.product_name : ''}%` }
-            }
+            where: whereObject
         });
         res.status(200).json(foundProducts);
     } catch (err) {
