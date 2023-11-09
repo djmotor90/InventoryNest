@@ -4,6 +4,7 @@ const app           = express();
 const { Sequelize } = require('sequelize');
 //database connection required on the landing page
 const db            = require('./models');
+const delivery_detail = require('./models/delivery_detail.js');
 const port = 3001;
 
 // CONFIGURATION / MIDDLEWARE
@@ -14,16 +15,87 @@ app.use(express.urlencoded({ extended: false }));
 
 
 //Routes
-app.get('/', (req, res) => {
+//STATIC ROUTE FOR THE LANDING PAGE
+app.get('/', async (req, res) => {
+    try {
+        //first get warehouse information for the card and the map
+        const wareHouseObj = await db.Warehouse.findAndCountAll({
+            attributes: ['warehouse_name', 'warehouse_address', 'warehouse_city', 'warehouse_state', 'warehouse_zipcode']
+        });
+        //next get sales information both for cards and for the scatterplot
+        const salesData = await db.Delivery.findAll({
+            attributes: ['delivery_date'],
+            include:[
+                { model: db.Delivery_Detail, as: "delivery_details", 
+                  attributes: ['quantity', 'total_price']
+                }
+            ]
+        });
+        //loop through to get card information, namely the salescount and sales revenue
+        let salesCount = 0;
+        let salesRevenue =0;
+        //stores a date and the sales revenue on each day
+        scatterObject = {};
+        for (let i=0; i< salesData.length; i++)
+        {
+            let deliveryDate = salesData[i].dataValues.delivery_date;
+            let deliveryDetailArray = salesData[i].dataValues.delivery_details
+            for (let j=0; j<deliveryDetailArray.length;j++)
+            {
+                //for the cards
+                let quantity = deliveryDetailArray[j].dataValues.quantity;
+                let totalPrice = deliveryDetailArray[j].dataValues.total_price;
+                salesCount = salesCount + quantity;
+                salesRevenue = salesRevenue + totalPrice;
+                //for the scatterplot
+                if (scatterObject[deliveryDate])
+                {
+                    console.log('here')   
+                    scatterObject[deliveryDate] = totalPrice + scatterObject[deliveryDate]; 
+                }
+                else
+                {
+                    scatterObject[deliveryDate] = totalPrice;
+                }
+            }
+        };
+        //get all the customers
+        const customerCount = await db.Customer.count();
+        //get 3 most recent transfers and get their date, to, and from
+        const transferData = await db.Transfer.findAll({
+            attributes: ['transfer_date'],   
+            include: [
+                {model: db.Warehouse, as: 'warehouse_from', attributes: ['warehouse_name']}, 
+                {model: db.Warehouse, as: 'warehouse_to', attributes: ['warehouse_name']}
+            ],
+            limit:3,
+            order: [['transfer_date', 'ASC']]
+        });
+        //want a count of the total number of sales, warehouses, and customers
+        let cardInformation = {
+            customerCount  : customerCount,
+            warehouseCount : wareHouseObj.count,
+            salesCount     : salesCount,
+            revenueCount   : salesRevenue
+        }
+        //final data push
+        const landingPageData = {
+            cardInformation     : cardInformation,
+            transferInformation : transferData,
+            scatterInformation  : scatterObject,
+            mapInformation      : wareHouseObj.rows
+        }
+        res.status(200).json(landingPageData);
+    } catch (error) {
+        
+    }
     //entry page, show information about the app itself
     //what is needed here from the backend
     // lets have a landing page that displays number of warehouses active
     // number of total sales
     // revenue chart
     // most recent sale
-    res.send('Hello World!');
 });
-
 //DYNAMIC ROUTES 
 
 app.use('/products', require('./controllers/products.js'));

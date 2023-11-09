@@ -33,6 +33,7 @@ module.exports = (sequelize, DataTypes) => {
     new_warehouse_id: DataTypes.INTEGER,
     product_id: DataTypes.INTEGER,
     transfer_date: DataTypes.DATE
+    //todo: add a transfer quantity
   }, {
     sequelize,
     modelName: 'Transfer',
