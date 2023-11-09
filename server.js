@@ -4,15 +4,12 @@ const app           = express();
 const { Sequelize } = require('sequelize');
 //database connection required on the landing page
 const db            = require('./models');
-//Annie Note: im assuming youre using this kim to get it going on your server
 const port = 3001;
 
 // CONFIGURATION / MIDDLEWARE
 require('dotenv').config();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-
-
 
 
 

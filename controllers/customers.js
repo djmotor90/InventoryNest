@@ -5,6 +5,8 @@ const db            = require('../models');
 const { Customer } = db;
 const { Op }        = require('sequelize');
 
+//table of all the customers
+
 
 
 

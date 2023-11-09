@@ -24,7 +24,6 @@ products.get('/', async (req,res) => {
                 whereObject[Object.keys(req.query)[i]] = req.query(Object.keys(req.query)[i]);
             };
         };
-        
         //you will eventually have to rewrite out the where here dynamically
         const foundProducts = await Product.findAll({
             where: whereObject
@@ -43,7 +42,7 @@ products.post('/', async (req, res) => {
 
 //Creation Route: simply needs to send over the appropriate fields and any field constraints
 products.get('/new', async (req, res) => {
-    
+
 });
 
 
