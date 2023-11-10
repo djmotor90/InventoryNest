@@ -2,15 +2,20 @@
 const express       = require('express');
 const app           = express();
 const { Sequelize } = require('sequelize');
+const { Op }        = require('sequelize');
+const cors          = require('cors');
 //database connection required on the landing page
 const db            = require('./models');
 const delivery_detail = require('./models/delivery_detail.js');
 const port = 3001;
 
+
 // CONFIGURATION / MIDDLEWARE
 require('dotenv').config();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+
 
 
 
@@ -34,11 +39,8 @@ app.get('/', async (req, res) => {
         //loop through to get card information, namely the salescount and sales revenue
         let salesCount = 0;
         let salesRevenue =0;
-        //stores a date and the sales revenue on each day
-        scatterObject = {};
         for (let i=0; i< salesData.length; i++)
         {
-            let deliveryDate = salesData[i].dataValues.delivery_date;
             let deliveryDetailArray = salesData[i].dataValues.delivery_details
             for (let j=0; j<deliveryDetailArray.length;j++)
             {
@@ -47,26 +49,49 @@ app.get('/', async (req, res) => {
                 let totalPrice = deliveryDetailArray[j].dataValues.total_price;
                 salesCount = salesCount + quantity;
                 salesRevenue = salesRevenue + totalPrice;
-                //for the scatterplot
-                if (scatterObject[deliveryDate])
-                {
-                    console.log('here')   
-                    scatterObject[deliveryDate] = totalPrice + scatterObject[deliveryDate]; 
-                }
-                else
-                {
-                    scatterObject[deliveryDate] = totalPrice;
-                }
             }
         };
+        //Now query the delivery details for sales that occured withing the last 10 days
+        let tendaysAgoDate = new Date(new Date().setHours(0,0,0,0) - ((24*60*60*1000) * 10)); 
+        const barData = await db.Delivery.findAll({
+            attributes: ['delivery_date'],
+            include:[
+                { model: db.Delivery_Detail, as: "delivery_details", 
+                  attributes: ['total_price']
+                }
+            ],
+            where: {
+                delivery_date: {
+                  [Op.gte]: [tendaysAgoDate.toISOString()]
+                }
+            }
+        });
+        //since there are likely days w 0 sales, lets make the keys ourselves
+
+        let barObj = {}
+        for (let i=0; i< 10; i++)
+        {
+            let date =  new Date(new Date().setHours(0,0,0,0) - ((24*60*60*1000)*i)).toString().substring(0, 10)
+            barObj[date] = 0
+        }
+
+        for (let i=0; i< barData.length; i++)
+        {
+            let wmd = barData[i].delivery_date.toString().substring(0, 10);
+            //now find all the delivery details associated with this entry
+            for (let j=0; j< barData[i].delivery_details.length; j++)
+            {
+                barObj[wmd] += barData[i].delivery_details[j].total_price
+            }
+        }
         //get all the customers
         const customerCount = await db.Customer.count();
         //get 3 most recent transfers and get their date, to, and from
         const transferData = await db.Transfer.findAll({
             attributes: ['transfer_date'],   
             include: [
-                {model: db.Warehouse, as: 'warehouse_from', attributes: ['warehouse_name']}, 
-                {model: db.Warehouse, as: 'warehouse_to', attributes: ['warehouse_name']}
+                {model: db.Warehouse, as: 'warehouse_from', attributes: ['warehouse_name', 'warehouse_id']}, 
+                {model: db.Warehouse, as: 'warehouse_to', attributes: ['warehouse_name', 'warehouse_id']}
             ],
             limit:3,
             order: [['transfer_date', 'ASC']]
@@ -82,13 +107,30 @@ app.get('/', async (req, res) => {
         const landingPageData = {
             cardInformation     : cardInformation,
             transferInformation : transferData,
-            scatterInformation  : scatterObject,
+            barInformation      : barObj,
             mapInformation      : wareHouseObj.rows
         }
+        res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
         res.status(200).json(landingPageData);
-    } catch (error) {
+    } catch (err) {
+        console.log(err);
         res.status(500).json(err);
     }
+});
+//STATIC ROUTE FOR THE NAVBAR
+app.get('/navbar', async(req,res) => {
+try {
+    //NOTE: at the moment we are assuming there is one owner only
+    const ownerData = await db.Owner.findOne({
+        where: {owner_id: 1},
+        attributes: ['owner_first_name', 'owner_last_name']
+    });
+    res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+    res.status(200).json(ownerData);
+
+} catch (error) {
+    
+}
 });
 //DYNAMIC ROUTES 
 
