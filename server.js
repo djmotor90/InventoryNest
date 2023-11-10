@@ -16,9 +16,6 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 
-
-
-
 //Routes
 //STATIC ROUTE FOR THE LANDING PAGE
 app.get('/', async (req, res) => {
@@ -127,9 +124,9 @@ try {
     });
     res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
     res.status(200).json(ownerData);
-
-} catch (error) {
-    
+} catch (err) {
+    console.log(err);
+    res.status(500).json(err);
 }
 });
 //DYNAMIC ROUTES 

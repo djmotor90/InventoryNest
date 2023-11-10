@@ -12,7 +12,7 @@ products.get('/', async (req,res) => {
     // Show a table of all products, therefore need to send over all the data
         //each table row will be a link, that will feed in the id 
     // needed associations: none afaik 
-    //there will be querying functionality and sorting functionality
+    //there will be querying functionality and sorting functionality, likely just do sort via bootstrap 
     try {
         //search through the queries and find those which match a column name from the 
         const columnNames = Object.keys(Product.rawAttributes);
@@ -26,8 +26,10 @@ products.get('/', async (req,res) => {
         };
         //you will eventually have to rewrite out the where here dynamically
         const foundProducts = await Product.findAll({
-            where: whereObject
+            where: whereObject,
+            attributes: {exclude: ['createdAt', 'updatedAt', 'product_picture_filename']}
         });
+        res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
         res.status(200).json(foundProducts);
     } catch (err) {
         res.status(500).json(err);
