@@ -84,8 +84,39 @@ products.post('/', async (req, res) => {
 });
 //Creation Route: simply needs to send over the appropriate fields and any field constraints
 products.get('/new', async (req, res) => {
+    let formInfo = {}
     //look into the database and find the appropriate fields
-    
+    //send over a json of the following structure
+    // field name : fieldtype, fieldrequirements (so like if ENUM give it the array), isAllowNull
+    Object.keys(Product.rawAttributes).forEach( key =>{
+        let value = null;
+        switch (Product.rawAttributes[key].type.toString())
+        {
+            case 'DATE':
+                value = ['date', []]
+                break;
+            case 'ENUM':
+                value = ['select',  Product.rawAttributes[key].values];
+                break;
+            case 'FLOAT':
+            case 'INTEGER':
+                //check if primary key, break out 
+                value = !Product.rawAttributes[key].primaryKey ? ['number', []] : null; 
+                 //later you could put min max in there, int, break this off into sep ints and floats, etc
+                break;
+            case 'VARCHAR(255)': //thus far we havent defined any limits to size and dont plan on it, but this can be converted into a regex
+                //TODO eventually will have to deal with filename
+                value = ['text', []];
+                break;
+        }
+        //remember this is allow null not required
+        if (value !== null)
+        {
+            value.push(Product.rawAttributes[key].allowNull ? Product.rawAttributes[key].allowNull : true);
+            formInfo[key] = value;
+        }
+    });
+    console.log(formInfo);
 });
 
 

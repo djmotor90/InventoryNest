@@ -18,13 +18,13 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   Customer.init({
-    customer_id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-    customer_first_name: DataTypes.STRING,
-    customer_last_name: DataTypes.STRING,
-    customer_purchase_count: DataTypes.INTEGER,
-    customer_address: DataTypes.STRING,
-    customer_city: DataTypes.STRING,
-    customer_state: {type: DataTypes.ENUM, values: ['AK',
+    customer_id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true, allowNull: false},
+    customer_first_name: {type: DataTypes.STRING, allowNull: false},
+    customer_last_name: {type: DataTypes.STRING, allowNull: false},
+    customer_purchase_count: { type:DataTypes.INTEGER, allowNull: true},
+    customer_address: { type: DataTypes.STRING, allowNull: false},
+    customer_city: {type: DataTypes.STRING, allowNull: false},
+    customer_state: {type: DataTypes.ENUM, allowNull: false, values: ['AK',
     'AL',
     'AR',
     'AZ',
@@ -76,8 +76,8 @@ module.exports = (sequelize, DataTypes) => {
     'WI',
     'WY'
     ]},
-    customer_zipcode: DataTypes.INTEGER,
-    customer_picture_filename: DataTypes.STRING
+    customer_zipcode: {type: DataTypes.INTEGER, allowNull: false},
+    customer_picture_filename: {type: DataTypes.STRING, allowNull: true}
   }, {
     sequelize,
     modelName: 'Customer',

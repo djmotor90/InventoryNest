@@ -29,10 +29,10 @@ module.exports = (sequelize, DataTypes) => {
   }
   Warehouse.init({
     warehouse_id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-    warehouse_name: DataTypes.STRING,
-    warehouse_address: DataTypes.STRING,
-    warehouse_city: DataTypes.STRING,
-    warehouse_state: {type: DataTypes.ENUM, values: ['AK',
+    warehouse_name: { type:DataTypes.STRING, allowNull:false},
+    warehouse_address: {type: DataTypes.STRING, allowNull: false},
+    warehouse_city: {type:DataTypes.STRING,allowNull:false},
+    warehouse_state: {type: DataTypes.ENUM, allowNull: false, values: ['AK',
     'AL',
     'AR',
     'AZ',
@@ -84,8 +84,8 @@ module.exports = (sequelize, DataTypes) => {
     'WI',
     'WY'
     ]},
-    warehouse_zipcode: DataTypes.INTEGER,
-    warehouse_capacity: DataTypes.FLOAT
+    warehouse_zipcode: { type: DataTypes.INTEGER, allowNull: false},
+    warehouse_capacity: {type: DataTypes.FLOAT, allowNull: true}
   }, {
     sequelize,
     modelName: 'Warehouse',
