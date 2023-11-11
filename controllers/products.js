@@ -32,6 +32,7 @@ products.get('/', async (req,res) => {
         res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
         res.status(200).json(foundProducts);
     } catch (err) {
+        res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
         res.status(500).json(err);
     };
 });
@@ -56,26 +57,33 @@ products.post('/', async (req, res) => {
             }
             const newProduct = await Product.create(sqlData);
             let product_id =  newProduct.product_id;
+            let product_name =  newProduct.product_name;
             //insert photo into AWS bucket iff the db insertion is successful and theres a photo filename
             if (photoName !== '')
             {
                 try {
                     //TODO insert into AWS bucket if present
-                    res.status(200).redirect(`/products/${product_id}?message=totaladdsuccess`);
+                    res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+                    res.status(201). res.status(201).json({message:'totaladdsuccess' , name:product_name});
                 } catch (error) {
                     //remove the pic filename
                     //const removeProductPictureResult = await Product.
                     //if it fails remove the file name from the db and define in the error response
-                    res.status(200).redirect(`/products/${product_id}?message=addsuccessnophoto`);
+                    res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+                    res.status(201).json({message:'addsuccessnophoto' , name:product_name});
                 }
             }
-            res.status(200).redirect(`/products/${product_id}?message=totaladdsuccess`);
+            res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+            //TODO change to a response and let react redirect, repsonse should have success message and product id
+            res.status(201).json({message:'totaladdsuccess' , name:product_name});
         } catch (err) {
             console.log(err);
+            res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
             res.status(500).json(err);
         }
     } catch (err) {
         console.log(err);
+        res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
         res.status(500).json(err);
     }
     //adding an entry 
@@ -105,18 +113,18 @@ products.get('/new', async (req, res) => {
                  //later you could put min max in there, int, break this off into sep ints and floats, etc
                 break;
             case 'VARCHAR(255)': //thus far we havent defined any limits to size and dont plan on it, but this can be converted into a regex
-                //TODO eventually will have to deal with filename
+                //TODO eventually will have to deal with filename and make value file
                 value = ['text', []];
                 break;
         }
         //remember this is allow null not required
         if (value !== null)
         {
-
-            value.push(Product.rawAttributes[key].allowNull ? true : Product.rawAttributes[key].allowNull);
+            value.push(Product.rawAttributes[key].allowNull === undefined ? true : Product.rawAttributes[key].allowNull);
             formInfo[key] = value;
         }
     });
+    res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
     res.status(200).json(formInfo);
 });
 
@@ -166,8 +174,10 @@ products.get('/:id', async (req,res) => {
         //Todo: lets also go through the delivery detail and decide if its a hot or cold item
         //Todo: lets go and get the picture and send over a 64bit version
         //Note: i can do this with an AWS bucket and can easily add/edit them too, kim im not sure how you want to do this 
+        res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
         res.status(200).json(foundProduct)
     } catch (err) {
+        res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
         res.status(500).json(err)
     }
 });
@@ -186,10 +196,12 @@ products.delete('/:id', async(req,res) => {
         const deletedInventory = await Inventory.destroy({
             where: {product_id: req.params.id}
         })
+        res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
         res.status(200).json({
             message: `successfully deleted ${deletedProduct} product(s), and deleted all associated inventories: ${deletedInventory}`
         });
     } catch (err) {
+        res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
         res.status(500).json(err);  
     }
 });

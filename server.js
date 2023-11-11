@@ -15,6 +15,7 @@ const port          = 3001;
 require('dotenv').config();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+app.use(cors());
 
 
 //Routes
