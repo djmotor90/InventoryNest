@@ -112,11 +112,12 @@ products.get('/new', async (req, res) => {
         //remember this is allow null not required
         if (value !== null)
         {
-            value.push(Product.rawAttributes[key].allowNull ? Product.rawAttributes[key].allowNull : true);
+
+            value.push(Product.rawAttributes[key].allowNull ? true : Product.rawAttributes[key].allowNull);
             formInfo[key] = value;
         }
     });
-    console.log(formInfo);
+    res.status(200).json(formInfo);
 });
 
 
