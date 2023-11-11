@@ -37,14 +37,55 @@ products.get('/', async (req,res) => {
 });
 //Post a new entry to the database
 products.post('/', async (req, res) => {
+    try {
+        console.log(req.body);
+        //TODO back end data validation
+        //NOTE: for right now we are just straight up ignoring adding a photo
+        //insert into database
+        try {
+            //remove the filename and photo filename from the body
+            let sqlData = req.body;
+            let photoName = '';
+            let photoData = null;
+            if (Object.keys(req.body).includes('product_picture_filename'))
+            {
+                photoName = req.body.product_picture_filename;
+                //eventually add in whatever you named the photo data to a var and delete from the req.body
+                //delete req.body.product_picture_file;
+                sqlData = req.body; 
+            }
+            const newProduct = await Product.create(sqlData);
+            let product_id =  newProduct.product_id;
+            //insert photo into AWS bucket iff the db insertion is successful and theres a photo filename
+            if (photoName !== '')
+            {
+                try {
+                    //TODO insert into AWS bucket if present
+                    res.status(200).redirect(`/products/${product_id}?message=totaladdsuccess`);
+                } catch (error) {
+                    //remove the pic filename
+                    //const removeProductPictureResult = await Product.
+                    //if it fails remove the file name from the db and define in the error response
+                    res.status(200).redirect(`/products/${product_id}?message=addsuccessnophoto`);
+                }
+            }
+            res.status(200).redirect(`/products/${product_id}?message=totaladdsuccess`);
+        } catch (err) {
+            console.log(err);
+            res.status(500).json(err);
+        }
+    } catch (err) {
+        console.log(err);
+        res.status(500).json(err);
+    }
     //adding an entry 
     //here you should do backend validation
 
 });
-
 //Creation Route: simply needs to send over the appropriate fields and any field constraints
 products.get('/new', async (req, res) => {
-
+    //look into the database and find the appropriate fields
+    
 });
 
 
@@ -52,6 +93,34 @@ products.get('/new', async (req, res) => {
 //Singular Product form: needs to show all product information 
 products.get('/:id', async (req,res) => {
     try {
+        
+        //check if we are coming from a successfull edit or delete
+        let toast = ""
+        for (let i=0; i<Object.keys(req.query).length; i++)
+        {
+            if (Object.keys(req.query)[i] === 'message')
+            {
+                //this will populate the toast on the front end 
+                switch (req.query[Object.keys(req.query)[i]])
+                {
+                    case 'totaladdsuccess':
+                         toast = 'Your product was successfully added to the database';
+                        break;
+                    case 'addsuccessnophoto':
+                         toast = 'Your product was successfully added to the database, but photo uploading failed. You may try again via the edit menu';
+                        break;
+                    case 'totaleditsuccess':
+                        toast = 'Your product was successfully edited.';
+                        break;
+                    case 'editsuccessnophoto':
+                        toast = 'Your product was successfully edited, however, the photo could not be uploaded';
+                        break;
+                    default:
+                        console.log('Look out! you have sent a message to product show page that has no toast equivalent!')
+                }
+            }
+        };
+
         //provide every warehouse as well that it is located in and the amount
         const foundProduct = await Product.findOne({
             where: {product_id: req.params.id},
@@ -86,7 +155,7 @@ products.delete('/:id', async(req,res) => {
             where: {product_id: req.params.id}
         })
         res.status(200).json({
-            message: `successfully deleted ${deletedProduct} band(s), and deleted all associated inventories: ${deletedInventory}`
+            message: `successfully deleted ${deletedProduct} product(s), and deleted all associated inventories: ${deletedInventory}`
         });
     } catch (err) {
         res.status(500).json(err);  

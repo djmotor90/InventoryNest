@@ -35,7 +35,7 @@ module.exports = {
         type: Sequelize.FLOAT
       },
       product_picture_filename: {
-        allowNull: false,
+        allowNull: true,
         type: Sequelize.STRING
       },
       createdAt: {

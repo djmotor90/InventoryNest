@@ -3,11 +3,12 @@ const express       = require('express');
 const app           = express();
 const { Sequelize } = require('sequelize');
 const { Op }        = require('sequelize');
+//Annie note: instead do indivudual res.set('Access-Control-Allow-Origin', 'http://localhost:3000'); for every route, works more consistently
 const cors          = require('cors');
 //database connection required on the landing page
 const db            = require('./models');
-const delivery_detail = require('./models/delivery_detail.js');
-const port = 3001;
+//Port/Service Variables
+const port          = 3001;
 
 
 // CONFIGURATION / MIDDLEWARE
@@ -64,7 +65,6 @@ app.get('/', async (req, res) => {
             }
         });
         //since there are likely days w 0 sales, lets make the keys ourselves
-
         let barObj = {}
         for (let i=0; i< 10; i++)
         {
@@ -110,6 +110,7 @@ app.get('/', async (req, res) => {
         res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
         res.status(200).json(landingPageData);
     } catch (err) {
+        //TODO eventually write in some error handles, also include some more trycatches above to control certain erros
         console.log(err);
         res.status(500).json(err);
     }
@@ -117,7 +118,7 @@ app.get('/', async (req, res) => {
 //STATIC ROUTE FOR THE NAVBAR
 app.get('/navbar', async(req,res) => {
 try {
-    //NOTE: at the moment we are assuming there is one owner only
+    //NOTE: at the moment we are assuming there is one owner only and we dont ever delete it 
     const ownerData = await db.Owner.findOne({
         where: {owner_id: 1},
         attributes: ['owner_first_name', 'owner_last_name']
@@ -130,7 +131,6 @@ try {
 }
 });
 //DYNAMIC ROUTES 
-
 app.use('/products', require('./controllers/products.js'));
 app.use('/customers', require('./controllers/customers.js'));
 app.use('/warehouses', require('./controllers/warehouses.js'));
@@ -139,6 +139,7 @@ app.use('/reporting', require('./controllers/reporting.js'))
 
 //CATCHALL ROUTE
 app.get('*', (req,res) => {
+    res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
     response.status(404).json({message: 'Page not found'});
 });
 
