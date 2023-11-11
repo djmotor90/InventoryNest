@@ -133,34 +133,6 @@ products.get('/new', async (req, res) => {
 //Singular Product form: needs to show all product information 
 products.get('/:id', async (req,res) => {
     try {
-        
-        //check if we are coming from a successfull edit or delete
-        let toast = ""
-        for (let i=0; i<Object.keys(req.query).length; i++)
-        {
-            if (Object.keys(req.query)[i] === 'message')
-            {
-                //this will populate the toast on the front end 
-                switch (req.query[Object.keys(req.query)[i]])
-                {
-                    case 'totaladdsuccess':
-                         toast = 'Your product was successfully added to the database';
-                        break;
-                    case 'addsuccessnophoto':
-                         toast = 'Your product was successfully added to the database, but photo uploading failed. You may try again via the edit menu';
-                        break;
-                    case 'totaleditsuccess':
-                        toast = 'Your product was successfully edited.';
-                        break;
-                    case 'editsuccessnophoto':
-                        toast = 'Your product was successfully edited, however, the photo could not be uploaded';
-                        break;
-                    default:
-                        console.log('Look out! you have sent a message to product show page that has no toast equivalent!')
-                }
-            }
-        };
-
         //provide every warehouse as well that it is located in and the amount
         const foundProduct = await Product.findOne({
             where: {product_id: req.params.id},

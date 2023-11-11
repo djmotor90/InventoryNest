@@ -76,5 +76,16 @@ warehouses.delete('/:id', async(req,res) => {
     }
 });
 
+//Purpose: transfers products from one warehouse to another. From the original warehouse/:id page, there will be a button that says "transfer"
+//this will show all products within warehouse a that you can select from, and then a dropdown to choose the warehouse you are bringing it to.
+//allow them to select multiple
+warehouses.get('/:id/transfer', async(req,res) => {
+    try {
+        
+    } catch (error) {
+        
+    }
+});
+
 
 module.exports = warehouses;
