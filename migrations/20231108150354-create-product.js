@@ -15,7 +15,7 @@ module.exports = {
       },
       product_description: {
         allowNull: false,
-        type: Sequelize.STRING
+        type: Sequelize.TEXT
       },
       product_category: {
         allowNull: false,

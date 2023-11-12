@@ -86,9 +86,6 @@ products.post('/', async (req, res) => {
         res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
         res.status(500).json(err);
     }
-    //adding an entry 
-    //here you should do backend validation
-
 });
 //Creation Route: simply needs to send over the appropriate fields and any field constraints
 products.get('/new', async (req, res) => {
@@ -127,27 +124,67 @@ products.get('/new', async (req, res) => {
     res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
     res.status(200).json(formInfo);
 });
-
-
-
 //Singular Product form: needs to show all product information 
 products.get('/:id', async (req,res) => {
     try {
         //provide every warehouse as well that it is located in and the amount
         const foundProduct = await Product.findOne({
             where: {product_id: req.params.id},
+            attributes: {exclude: ['createdAt', 'updatedAt']},
             include:[
-                {model: Inventory, as: "inventories", include: {
-                    model: Warehouse, as: "warehouse",
+                {model: Inventory, as: "inventories", attributes: ['current_stock_level'],
+                    include: {
+                        model: Warehouse, as: "warehouse",attributes: {exclude: ['createdAt', 'updatedAt']}
                 }},
             ]
         });
-        //these should be their own individual trycatches, even if they fail some data should be sent over
-        //Todo: lets also go through the delivery detail and decide if its a hot or cold item
-        //Todo: lets go and get the picture and send over a 64bit version
-        //Note: i can do this with an AWS bucket and can easily add/edit them too, kim im not sure how you want to do this 
+        //seperate what is sent into a form
+        //show form only holds the product tables info, so remove all populated data
+        const showFormInfo = {};
+        for (let i=0; i< Object.keys(foundProduct.dataValues).length; i++ ){
+            //this takes out anything thats an array or object, so we are taking out the populations
+            if (typeof foundProduct.dataValues[Object.keys(foundProduct.dataValues)[i]] !== 'object')
+            {
+                //for the sake of standardizing this card for the frontend for warehouses and customers, define the pic information and the 
+                //name information and the description (textarea) if it exists
+                switch (Object.keys(foundProduct.dataValues)[i])
+                {
+                    case 'product_name':
+                        showFormInfo.name = foundProduct.dataValues[Object.keys(foundProduct.dataValues)[i]];
+                        break;
+                    case "product_picture_filename":
+                        showFormInfo.picture = foundProduct.dataValues[Object.keys(foundProduct.dataValues)[i]];
+                        break;
+                    case 'product_description':
+                        showFormInfo.description = foundProduct.dataValues[Object.keys(foundProduct.dataValues)[i]];
+                        break;
+                    case 'product_id':
+                        showFormInfo.id = foundProduct.dataValues[Object.keys(foundProduct.dataValues)[i]];
+                        break;
+                    default:
+                        showFormInfo[Object.keys(foundProduct.dataValues)[i]] = foundProduct.dataValues[Object.keys(foundProduct.dataValues)[i]];
+                };
+            }
+        }
+        //Luckily, a warehouse can only ever have one inventory record per product
+        // so define it as warehouse_id : {key:val}...
+        const wareHouseTableInfo = {};
+        for (let i=0; i< foundProduct.inventories.length; i++)
+        {
+            wareHouseTableInfo[foundProduct.inventories[i].dataValues.warehouse.warehouse_id] = foundProduct.inventories[i].warehouse.dataValues;
+            //add in the stock amount
+            wareHouseTableInfo[foundProduct.inventories[i].warehouse.warehouse_id].current_stock_level =   foundProduct.inventories[1].dataValues.current_stock_level;
+        }
+        const submitPurchaseForm = {};
+        
+    
+        const sentData = {
+            showFormInfo   : showFormInfo,
+            associateTable : wareHouseTableInfo,
+            purchaseForm   : submitPurchaseForm
+        }
         res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
-        res.status(200).json(foundProduct)
+        res.status(200).json(sentData);
     } catch (err) {
         res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
         res.status(500).json(err)
