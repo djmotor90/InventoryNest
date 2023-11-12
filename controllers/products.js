@@ -190,16 +190,18 @@ products.get('/:id', async (req,res) => {
         wareHouseTableInfo.forEach(warehouse => {
             warehousesWithProductIds[warehouse.warehouse_id] = warehouse.current_stock_level
         });
-        Object.keys(allWarehouses).forEach(warehouseKey => {
-            let warehouse = allWarehouses[warehouseKey];
+        Object.keys(allWarehouses).forEach((warehouseKey) => {
             //check if the warehouse id is in the withproduct obj we made above, if so throw it the currentstockval
-            if (Object.keys(warehousesWithProductIds).includes(warehouse.warehouse_id.toString())){
-                 warehouse.current_stock_level = warehousesWithProductIds[warehouse.warehouse_id]
+            if (Object.keys(warehousesWithProductIds).includes(  allWarehouses[warehouseKey].warehouse_id.toString())){
+                //theres got to be a better way but im looping through and dynamically assinging the formatted one. I tried just directly adding 
+                // to the all warehouses but wasnt working
+                
+                allWarehouses[warehouseKey].dataValues.current_stock_level = warehousesWithProductIds[allWarehouses[warehouseKey].warehouse_id]
             }
             else{
-                warehouse.current_stock_level = 0;   
+                allWarehouses[warehouseKey].dataValues.current_stock_level = 0;
             }
-        })
+        });
         //For purchasing you also need to know how much money our main user has 
         const ownerMoneyQuery = await Owner.findOne({
             // we always use the first user
@@ -221,6 +223,7 @@ products.get('/:id', async (req,res) => {
         res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
         res.status(200).json(sentData);
     } catch (err) {
+        console.log(err)
         res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
         res.status(500).json(err)
     }
