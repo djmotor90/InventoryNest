@@ -3,7 +3,7 @@ const products     = require('express').Router();
 const { response } = require('express');
 const db           = require('../models');
 const { Op }       = require('sequelize');
-const { Product, Inventory, Warehouse } = db;
+const { Product, Inventory, Warehouse, Owner } = db;
 
 
 //STATIC ROUTES
@@ -140,7 +140,7 @@ products.get('/:id', async (req,res) => {
         });
         //seperate what is sent into a form
         //show form only holds the product tables info, so remove all populated data
-        const showFormInfo = {};
+        const showFormInfo = {list : {}};
         for (let i=0; i< Object.keys(foundProduct.dataValues).length; i++ ){
             //this takes out anything thats an array or object, so we are taking out the populations
             if (typeof foundProduct.dataValues[Object.keys(foundProduct.dataValues)[i]] !== 'object')
@@ -162,26 +162,61 @@ products.get('/:id', async (req,res) => {
                         showFormInfo.id = foundProduct.dataValues[Object.keys(foundProduct.dataValues)[i]];
                         break;
                     default:
-                        showFormInfo[Object.keys(foundProduct.dataValues)[i]] = foundProduct.dataValues[Object.keys(foundProduct.dataValues)[i]];
+                        showFormInfo.list[Object.keys(foundProduct.dataValues)[i]] = foundProduct.dataValues[Object.keys(foundProduct.dataValues)[i]];
                 };
             }
         }
         //Luckily, a warehouse can only ever have one inventory record per product
         // so define it as warehouse_id : {key:val}...
-        const wareHouseTableInfo = {};
+        // the logic of the front end is it takes in a object of {}
+        const wareHouseTableInfo = [];
         for (let i=0; i< foundProduct.inventories.length; i++)
         {
-            wareHouseTableInfo[foundProduct.inventories[i].dataValues.warehouse.warehouse_id] = foundProduct.inventories[i].warehouse.dataValues;
+            wareHouseTableInfo.push(foundProduct.inventories[i].warehouse.dataValues);
             //add in the stock amount
-            wareHouseTableInfo[foundProduct.inventories[i].warehouse.warehouse_id].current_stock_level =   foundProduct.inventories[1].dataValues.current_stock_level;
-        }
-        const submitPurchaseForm = {};
-        
-    
+            wareHouseTableInfo[i].current_stock_level =   foundProduct.inventories[1].dataValues.current_stock_level;
+        };
+        //for both a purchase and transfer form we need every single warehouse
+        //why dont we give name (state)
+        //realistically we should get the capacity but i dont have time to do this check in the end 
+        //also include how much of that item the warehouse currently has 
+        const allWarehouses = await Warehouse.findAll({
+            attributes: ['warehouse_id', 'warehouse_name', 'warehouse_state'],
+        });
+        //lets put this together such that we have 1:warehouse_id, 'warehouse_name,'warehouse_state','current_stock_level' = 0 if none
+        //NOTE this says when i do typeof its an object but i can do array methods, what is this?
+        //lets get from above all warehouses with product in it, lets get their id
+        let warehousesWithProductIds = {};
+        wareHouseTableInfo.forEach(warehouse => {
+            warehousesWithProductIds[warehouse.warehouse_id] = warehouse.current_stock_level
+        });
+        Object.keys(allWarehouses).forEach(warehouseKey => {
+            let warehouse = allWarehouses[warehouseKey];
+            //check if the warehouse id is in the withproduct obj we made above, if so throw it the currentstockval
+            if (Object.keys(warehousesWithProductIds).includes(warehouse.warehouse_id.toString())){
+                 warehouse.current_stock_level = warehousesWithProductIds[warehouse.warehouse_id]
+            }
+            else{
+                warehouse.current_stock_level = 0;   
+            }
+        })
+        //For purchasing you also need to know how much money our main user has 
+        const ownerMoneyQuery = await Owner.findOne({
+            // we always use the first user
+            where: [{owner_id : 1}],
+            attributes:[ 'starting_money','total_expenditures']
+        });
+        let ownerMoney = ownerMoneyQuery.starting_money - ownerMoneyQuery.total_expenditures;
+        console.log(ownerMoney)
+        //what we need here: we need allwarehouses and ownermoney
+        const  purchaseTransferForm = {
+            allWarehouses : allWarehouses,
+            ownerMoney : ownerMoney,
+        };
         const sentData = {
             showFormInfo   : showFormInfo,
             associateTable : wareHouseTableInfo,
-            purchaseForm   : submitPurchaseForm
+            purchaseForm   : purchaseTransferForm
         }
         res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
         res.status(200).json(sentData);
