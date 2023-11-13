@@ -347,9 +347,20 @@ products.post('/:id', async (req,res) => {
     }
 
 });
+//This handles updating any individual product
 products.put('/:id', async(req,res) => {
-    //update the entry 
     //here you should do backend validation 
+    //NOTE: right now we have nothing even trying to handle picture insertions, we are just straight putting it in 
+    console.log(req.body);
+    const productToUpdate = await Product.findOne({
+        where:{
+            product_id:req.params.id
+        }
+    });
+    await productToUpdate.update(req.body);
+    await productToUpdate.save()
+    res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+    res.status(201).json({message:'Your Edit Was Successful', id: req.params.id});
 });
 //Create the form for editing an entry, this is nearly identical to new but with the values populated
 products.get('/:id/edit', async (req,res) => {
