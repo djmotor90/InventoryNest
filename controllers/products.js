@@ -3,7 +3,7 @@ const products     = require('express').Router();
 const { response } = require('express');
 const db           = require('../models');
 const { Op }       = require('sequelize');
-const { Product, Inventory, Warehouse, Owner } = db;
+const { Product, Inventory, Warehouse, Owner, Transfer } = db;
 
 
 
@@ -287,9 +287,52 @@ products.post('/:id', async (req,res) => {
                     });
                 }
                 res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
-                res.status(201).json({message:'purchaseSucess'});
+                res.status(201).json({message:'Your Purchase Was Successful'});
                 break;
             case 'transfer':
+              //TODO trycatches are needed here
+                //first check if your to has an inventory already for the product
+                //and double check that your from has an inventory for the product
+                const fromInventory = await Inventory.findOne({
+                    where: {warehouse_id : req.body.warehouseFrom,
+                        product_id : req.body.productId
+                     } 
+                });
+                if (fromInventory === null){
+                    throw err;
+                }
+                const toInventory = await Inventory.findOne({
+                    where: {warehouse_id : req.body.warehouseTo,
+                        product_id : req.body.productId
+                     } 
+                });
+                if (toInventory === null){
+                    // you need to create a new inventory
+                    const newInventory = await Inventory.create({
+                        //not using this yet
+                        minimum_stock_level : 5,
+                        current_stock_level : req.body.amount,
+                        product_id          : req.body.productId,
+                        warehouse_id        : req.body.warehouseTo
+                    });
+                }else{
+                    // you need to increment your to inventory
+                    await toInventory.increment('current_stock_level',{ by: req.body.amount});
+                    await fromInventory.decrement('current_stock_level',{ by: req.body.amount});
+                    await toInventory.save();
+                    await fromInventory.save();
+                }
+                //create your transfer ticket:
+                const transferTicket = await Transfer.create({
+                    //not using this yet
+                    original_warehouse_id : parseInt(req.body.warehouseFrom),
+                    new_warehouse_id      : parseInt(req.body.warehouseTo),
+                    product_id            : parseInt(req.body.productId),
+                    transfer_date         : new Date().toISOString(),
+                    transfer_amount       : parseInt(req.body.amount)
+                });
+                res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+                res.status(201).json({message:'Your Transfer Was Successful'});
                 break;
             default:
                 console.error('added a type of post from products/id that has not been handled on the backend');
@@ -298,6 +341,7 @@ products.post('/:id', async (req,res) => {
     } catch (err) {
         console.error(err);
         res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+        return  res.status(500).json('There was an error submitting this form');
     }
 
 });

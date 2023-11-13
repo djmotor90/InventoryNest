@@ -8,6 +8,8 @@ module.exports = {
         owner_first_name: "John",
         owner_last_name: "Doe",
         starting_money: 100000,
+        total_expenditures: 0,
+        total_revenue: 0,
         createdAt: new Date(),
         updatedAt: new Date()
       },
