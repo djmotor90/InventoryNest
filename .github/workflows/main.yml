@@ -44,6 +44,8 @@ jobs:
               "dialect": "${{ secrets.DB_DIALECT }}"
             }
           }' > config/config.json
+          # Create or overwrite .env file with PG_URI
+          echo "PG_URI=${{ secrets.PG_URI }}" > .env
           # Install dependencies and start the application
           npm install --only=prod
           pm2 reload InventoryNest || pm2 start server.js --name InventoryNest --watch
