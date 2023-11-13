@@ -6,6 +6,8 @@ const { Op }       = require('sequelize');
 const { Product, Inventory, Warehouse, Owner } = db;
 
 
+
+
 //STATIC ROUTES
 //Home route: simply needs to send over all table data to populate a table
 products.get('/', async (req,res) => {
@@ -74,15 +76,15 @@ products.post('/', async (req, res) => {
                 }
             }
             res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
-            //TODO change to a response and let react redirect, repsonse should have success message and product id
             res.status(201).json({message:'totaladdsuccess' , name:product_name});
         } catch (err) {
-            console.log(err);
+            console.error(err);
             res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
             res.status(500).json(err);
         }
     } catch (err) {
-        console.log(err);
+        //do some err
+        console.error(err);
         res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
         res.status(500).json(err);
     }
@@ -113,6 +115,7 @@ products.get('/new', async (req, res) => {
                 //TODO eventually will have to deal with filename and make value file
                 value = ['text', []];
                 break;
+            //also send in a TEXT as textarea
         }
         //remember this is allow null not required
         if (value !== null)
@@ -174,7 +177,8 @@ products.get('/:id', async (req,res) => {
         {
             wareHouseTableInfo.push(foundProduct.inventories[i].warehouse.dataValues);
             //add in the stock amount
-            wareHouseTableInfo[i].current_stock_level =   foundProduct.inventories[1].dataValues.current_stock_level;
+            console.log(foundProduct.inventories[i].dataValues.current_stock_level);
+            wareHouseTableInfo[i].current_stock_level =   foundProduct.inventories[i].dataValues.current_stock_level;
         };
         //for both a purchase and transfer form we need every single warehouse
         //why dont we give name (state)
@@ -196,7 +200,7 @@ products.get('/:id', async (req,res) => {
                 //theres got to be a better way but im looping through and dynamically assinging the formatted one. I tried just directly adding 
                 // to the all warehouses but wasnt working
                 
-                allWarehouses[warehouseKey].dataValues.current_stock_level = warehousesWithProductIds[allWarehouses[warehouseKey].warehouse_id]
+                allWarehouses[warehouseKey].dataValues.current_stock_level = warehousesWithProductIds[allWarehouses[warehouseKey].warehouse_id];
             }
             else{
                 allWarehouses[warehouseKey].dataValues.current_stock_level = 0;
@@ -206,10 +210,9 @@ products.get('/:id', async (req,res) => {
         const ownerMoneyQuery = await Owner.findOne({
             // we always use the first user
             where: [{owner_id : 1}],
-            attributes:[ 'starting_money','total_expenditures']
+            attributes:[ 'starting_money','total_expenditures', 'total_revenue']
         });
-        let ownerMoney = ownerMoneyQuery.starting_money - ownerMoneyQuery.total_expenditures;
-        console.log(ownerMoney)
+        let ownerMoney = ownerMoneyQuery.starting_money - ownerMoneyQuery.total_expenditures + ownerMoneyQuery.total_revenue;
         //what we need here: we need allwarehouses and ownermoney
         const  purchaseTransferForm = {
             allWarehouses : allWarehouses,
@@ -227,6 +230,76 @@ products.get('/:id', async (req,res) => {
         res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
         res.status(500).json(err)
     }
+});
+//This handles both transferring and buying new products
+products.post('/:id', async (req,res) => {
+    try {
+        switch (req.body.typeof){
+            case 'purchase':
+                //TODO backend validation
+                //for now lets assume its ok 
+                //first lets add the cost to our owner profile
+                try{
+                    const OwnerProfile = await Owner.findOne({
+                        where: {owner_id : 1} 
+                    });
+                    const productPrice = await Product.findOne({
+                        where: {product_id : req.body.product_id},
+                        attributes:['product_provider_price']
+                    });
+                    if (OwnerProfile.starting_money + OwnerProfile.total_revenue
+                         - OwnerProfile.total_expenditures - (productPrice.product_provider_price * parseInt(req.body.amount)) < 0){
+                            //TODO make this the custom error for you dont have enough money, as there can be other errors this may catch
+                            throw err;
+                         }
+                    await OwnerProfile.increment('total_expenditures',{ by: productPrice.product_provider_price * parseInt(req.body.amount)});
+                    //ideally id want this outside at the end but im not sure how to do it
+                    await OwnerProfile.save();
+                }
+                catch (err){
+                    console.error(err);
+                    res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+                    return  res.status(500).json('You have tried to buy something you cannot afford');
+                }
+                //then we check if the product already had an inventory associated with it in the warehouse
+                const checkIfPresent = await Inventory.count({where: {
+                    product_id : req.body.product_id,
+                    warehouse_id : req.body.warehouse_id
+                }});
+                if (checkIfPresent > 0){
+                    const inventoryToUpdate = await Inventory.findOne({where: {
+                        product_id : req.body.product_id,
+                        warehouse_id : req.body.warehouse_id
+                    }});
+                    await inventoryToUpdate.increment('current_stock_level', { by: req.body.amount});
+                    //dont save this until you do the other updates
+                    await inventoryToUpdate.save();
+                }
+                else{
+                    //then you create a new entry
+                    const newInventory = await Inventory.create({
+                        warehouse_id       : req.body.warehouse_id,
+                        product_id         : req.body.product_id,
+                        current_stock_level: req.body.amount,
+                        //this is a variable we arent using rn but ill give it a value anyways
+                        minimum_stock_level: 5,
+
+                    });
+                }
+                res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+                res.status(201).json({message:'purchaseSucess'});
+                break;
+            case 'transfer':
+                break;
+            default:
+                console.error('added a type of post from products/id that has not been handled on the backend');
+                throw err;
+        }
+    } catch (err) {
+        console.error(err);
+        res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+    }
+
 });
 products.put('/:id', async(req,res) => {
     //update the entry 
