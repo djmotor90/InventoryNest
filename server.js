@@ -89,10 +89,11 @@ app.get('/', async (req, res) => {
             attributes: ['transfer_date'],   
             include: [
                 {model: db.Warehouse, as: 'warehouse_from', attributes: ['warehouse_name', 'warehouse_id']}, 
-                {model: db.Warehouse, as: 'warehouse_to', attributes: ['warehouse_name', 'warehouse_id']}
+                {model: db.Warehouse, as: 'warehouse_to', attributes: ['warehouse_name', 'warehouse_id']},
+                {model: db.Product, as: 'product', attributes: ['product_name', 'product_id']}
             ],
             limit:3,
-            order: [['transfer_date', 'ASC']]
+            order: [['transfer_date', 'DESC']]
         });
         //want a count of the total number of sales, warehouses, and customers
         let cardInformation = {

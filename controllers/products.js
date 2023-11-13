@@ -41,7 +41,6 @@ products.get('/', async (req,res) => {
 //Post a new entry to the database
 products.post('/', async (req, res) => {
     try {
-        console.log(req.body);
         //TODO back end data validation
         //NOTE: for right now we are just straight up ignoring adding a photo
         //insert into database
@@ -50,6 +49,7 @@ products.post('/', async (req, res) => {
             let sqlData = req.body;
             let photoName = '';
             let photoData = null;
+            // first lets see if they have input a photo. If so, the photo must be added to the aws bucket
             if (Object.keys(req.body).includes('product_picture_filename'))
             {
                 photoName = req.body.product_picture_filename;
@@ -59,24 +59,23 @@ products.post('/', async (req, res) => {
             }
             const newProduct = await Product.create(sqlData);
             let product_id =  newProduct.product_id;
-            let product_name =  newProduct.product_name;
             //insert photo into AWS bucket iff the db insertion is successful and theres a photo filename
             if (photoName !== '')
             {
                 try {
                     //TODO insert into AWS bucket if present
                     res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
-                    res.status(201). res.status(201).json({message:'totaladdsuccess' , name:product_name});
+                    res.status(201). res.status(201).json({message:'totaladdsuccess' , id:product_id});
                 } catch (error) {
                     //remove the pic filename
                     //const removeProductPictureResult = await Product.
                     //if it fails remove the file name from the db and define in the error response
                     res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
-                    res.status(201).json({message:'addsuccessnophoto' , name:product_name});
+                    res.status(201).json({message:'addsuccessnophoto' , id:product_id});
                 }
             }
             res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
-            res.status(201).json({message:'totaladdsuccess' , name:product_name});
+            res.status(201).json({message:'totaladdsuccess' , id:product_id});
         } catch (err) {
             console.error(err);
             res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
@@ -115,8 +114,11 @@ products.get('/new', async (req, res) => {
                 //TODO eventually will have to deal with filename and make value file
                 value = ['text', []];
                 break;
-            //also send in a TEXT as textarea
+            case 'TEXT':
+                value = ['textarea', []];
+                break;
         }
+        //Now loop through and add if this input is required or not
         //remember this is allow null not required
         if (value !== null)
         {
@@ -349,6 +351,62 @@ products.put('/:id', async(req,res) => {
     //update the entry 
     //here you should do backend validation 
 });
+//Create the form for editing an entry, this is nearly identical to new but with the values populated
+products.get('/:id/edit', async (req,res) => {
+    //TODO: change forminput to an object of objects, lacking keynames is confusing, do above for new too
+    try {
+        //first query the database to get your full product information, this will be the 4th value of every child forminfo object
+        const foundProduct = await Product.findOne({
+            where: {product_id: req.params.id},
+            attributes: {exclude: ['createdAt', 'updatedAt']}
+        });
+        let formInfo = {}
+        //look into the database and find the appropriate fields
+        //send over a json of the following structure
+        // field name : fieldtype, fieldrequirements (so like if ENUM give it the array), isAllowNull, CURRENT VALUE
+        Object.keys(Product.rawAttributes).forEach( key =>{
+            let value = null;
+            switch (Product.rawAttributes[key].type.toString())
+            {
+                case 'DATE':
+                    value = ['date', []]
+                    break;
+                case 'ENUM':
+                    value = ['select',  Product.rawAttributes[key].values];
+                    break;
+                case 'FLOAT':
+                case 'INTEGER':
+                    //check if primary key, break out 
+                    value = !Product.rawAttributes[key].primaryKey ? ['number', []] : null; 
+                     //later you could put min max in there, int, break this off into sep ints and floats, etc
+                    break;
+                case 'VARCHAR(255)': //thus far we havent defined any limits to size and dont plan on it, but this can be converted into a regex
+                    //TODO eventually will have to deal with filename and make value file
+                    value = ['text', []];
+                    break;
+                case 'TEXT':
+                    value = ['textarea', []];
+                    break;
+            }
+            //Now loop through and add if this input is required or not
+            //remember this is allow null not required
+            if (value !== null)
+            {
+                value.push(Product.rawAttributes[key].allowNull === undefined ? true : Product.rawAttributes[key].allowNull);
+                formInfo[key] = value;
+                value.push(foundProduct.dataValues[key]);
+            }
+            //Now we add in our preexitsting data
+        });
+        res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+        res.status(200).json(formInfo);
+    } catch (err) {
+        console.log(err)
+        res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+        res.status(500).json(err)
+    }
+});
+
 products.delete('/:id', async(req,res) => {
     try {
         //TODO: it may be better in the future to not delete it, but maybe move it to a history database so, if you please, you can still do analytics on it
