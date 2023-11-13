@@ -20,5 +20,30 @@ jobs:
         script: |
           cd InventoryNest
           git pull origin main
+          # Create config.json file with secrets
+          echo '{
+            "development": {
+              "username": "${{ secrets.DB_USERNAME }}",
+              "password": "${{ secrets.DB_PASSWORD }}",
+              "database": "${{ secrets.DB_DATABASE }}",
+              "host": "${{ secrets.DB_HOST }}",
+              "dialect": "${{ secrets.DB_DIALECT }}"
+            },
+            "test": {
+              "username": "${{ secrets.DB_USERNAME }}",
+              "password": "${{ secrets.DB_PASSWORD }}",
+              "database": "${{ secrets.DB_DATABASE }}",
+              "host": "${{ secrets.DB_HOST }}",
+              "dialect": "${{ secrets.DB_DIALECT }}"
+            },
+            "production": {
+              "username": "${{ secrets.DB_USERNAME }}",
+              "password": "${{ secrets.DB_PASSWORD }}",
+              "database": "${{ secrets.DB_DATABASE }}",
+              "host": "${{ secrets.DB_HOST }}",
+              "dialect": "${{ secrets.DB_DIALECT }}"
+            }
+          }' > config/config.json
+          # Install dependencies and start the application
           npm install --only=prod
           pm2 reload InventoryNest || pm2 start server.js --name InventoryNest --watch
