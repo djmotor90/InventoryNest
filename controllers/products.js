@@ -172,12 +172,12 @@ products.get('/:id', async (req,res) => {
         //Luckily, a warehouse can only ever have one inventory record per product
         // so define it as warehouse_id : {key:val}...
         // the logic of the front end is it takes in a object of {}
+        //first we check if there are any warehouses with this product via the inventories
         const wareHouseTableInfo = [];
         for (let i=0; i< foundProduct.inventories.length; i++)
         {
             wareHouseTableInfo.push(foundProduct.inventories[i].warehouse.dataValues);
             //add in the stock amount
-            console.log(foundProduct.inventories[i].dataValues.current_stock_level);
             wareHouseTableInfo[i].current_stock_level =   foundProduct.inventories[i].dataValues.current_stock_level;
         };
         //for both a purchase and transfer form we need every single warehouse
