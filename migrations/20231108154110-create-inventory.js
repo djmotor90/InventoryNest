@@ -13,10 +13,7 @@ module.exports = {
         allowNull: false,
         type: Sequelize.INTEGER
       },
-      product_id: {
-        allowNull: false,
-        type: Sequelize.INTEGER
-      },
+      
       minimum_stock_level: {
         type: Sequelize.INTEGER
       },
