@@ -139,11 +139,12 @@ app.use('/warehouses', require('./controllers/warehouses.js'));
 app.use('/reporting', require('./controllers/reporting.js'))
 
 
-//CATCHALL ROUTE
-app.get('*', (req,res) => {
+// Catch-all route
+app.get('*', (req, res) => {
     res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
-    response.status(404).json({message: 'Page not found'});
+    res.status(404).json({ message: 'Page not found' });
 });
+
 
 
 
