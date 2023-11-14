@@ -224,7 +224,14 @@ products.get('/:id', async (req,res) => {
             showFormInfo   : showFormInfo,
             associateTable : wareHouseTableInfo,
             purchaseForm   : purchaseTransferForm
-        }
+        };
+
+        /////Rhionna we are starting here to make the product performance analytics 
+        //things we need: the total quantity of products across all inventories
+        //                the total number of sales this product has had 
+        //                the return from stock price versus sell price
+        //                the location in which it is most successfull
+        //                a graph that shows over the post 30 days when it has been purchased
         res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
         res.status(200).json(sentData);
     } catch (err) {
