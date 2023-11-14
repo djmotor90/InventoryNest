@@ -232,6 +232,14 @@ products.get('/:id', async (req,res) => {
         //                the return from stock price versus sell price
         //                the location in which it is most successfull
         //                a graph that shows over the post 30 days when it has been purchased
+        analyticsObject = {
+            quantity:0
+        };
+
+        foundProduct.dataValues.inventories.forEach((inventory) => {
+            //this is may mapping function
+            analyticsObject.quantity =  analyticsObject.quantity + inventory.dataValues.current_stock_level;
+        })//accepts a callback)
         res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
         res.status(200).json(sentData);
     } catch (err) {
