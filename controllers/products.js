@@ -3,7 +3,7 @@ const products     = require('express').Router();
 const { response } = require('express');
 const db           = require('../models');
 const { Op }       = require('sequelize');
-const { Product, Inventory, Warehouse, Owner, Transfer } = db;
+const { Product, Inventory, Warehouse, Owner, Transfer, Delivery_Detail } = db;
 
 
 
@@ -233,13 +233,22 @@ products.get('/:id', async (req,res) => {
         //                the location in which it is most successfull
         //                a graph that shows over the post 30 days when it has been purchased
         analyticsObject = {
-            quantity:0
+            quantity:0,
+            quantitySold: 0,
+
         };
         foundProduct.dataValues.inventories.forEach((inventory) => {
             //this is may mapping function
             analyticsObject.quantity =  analyticsObject.quantity + inventory.dataValues.current_stock_level;
+        })//accepts a callback)
+        const foundDeliveries = await Delivery_Detail.findAll({
+            where: {product_id: req.params.id},
+            attributes: ['quantity'],
         });
-        
+        foundDeliveries.forEach((delivery) => {
+            //this is may mapping function
+            analyticsObject.quantitySold =  analyticsObject.quantitySold + delivery.dataValues.quantity;
+        })
         res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
         res.status(200).json(sentData);
     } catch (err) {
