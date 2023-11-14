@@ -20,7 +20,7 @@ module.exports = {
       product_category: {
         allowNull: false,
         type   : Sequelize.ENUM,
-        values :['Electronics', 'Clothing', 'Furniture','Books','Toys', 'Kitchen Appliances', 'Beauty Products','Sports Equipment', 'Home Decor', 'Tools']
+        values :['Electronics', 'Cloth', 'Furniture','Books','Toys', 'Kitchen Appliances', 'Beauty Products','Sports Equipment', 'Home Decor', 'Tools']
       },
       product_weight: {
         allowNull: true,
