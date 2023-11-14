@@ -44,7 +44,7 @@ warehouses.post('/', async (req, res) => {
         const newWarehouse = await Warehouse.create(sqlData);
         let warehouse_id =  newWarehouse.warehouse_id;
         res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
-        res.status(201). res.status(201).json({message:'totaladdsuccess' , id:warehouse_id});
+        res.status(201).json({message:'totaladdsuccess' , id: warehouse_id});
     } catch (err) {
         //do some err
         console.error(err);
@@ -93,6 +93,136 @@ warehouses.get('/new', async (req, res) => {
     });
     res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
     res.status(200).json(formInfo);
+});
+//Get individual route: shows the information about a singular warehouse, allows you to transfer products between warehouses or purchase more 
+// of one product to the warehouse
+warehouses.get('/:id', async (req,res) => {
+    try {
+        //provide every product within an individual warehouse as well
+        const foundWarehouse = await Warehouse.findOne({
+            where: {product_id: req.params.id},
+            attributes: {exclude: ['createdAt', 'updatedAt']},
+            include:[
+                {model: Inventory, as: "inventories", attributes: {exclude: ['createdAt', 'updatedAt']},
+                    include: {
+                        model: Product, as: "product", attributes: {exclude: ['createdAt', 'updatedAt']}
+                }},
+            ]
+        });
+        //seperate what is sent into a form
+        //show form only holds the product tables info, so remove all populated data
+        const showFormInfo = {list : {}};
+        for (let i=0; i< Object.keys(foundProduct.dataValues).length; i++ ){
+            //this takes out anything thats an array or object, so we are taking out the populations
+            if (typeof foundProduct.dataValues[Object.keys(foundProduct.dataValues)[i]] !== 'object')
+            {
+                //for the sake of standardizing this card for the frontend for warehouses and customers, define the pic information and the 
+                //name information and the description (textarea) if it exists
+                switch (Object.keys(foundProduct.dataValues)[i])
+                {
+                    case 'warehouse_name':
+                        showFormInfo.name = foundWarehouse.dataValues[Object.keys(foundWarehouse.dataValues)[i]];
+                        break;
+                    case 'warehouse_description':
+                        showFormInfo.description = foundProduct.dataValues[Object.keys(foundProduct.dataValues)[i]];
+                        break;
+                    case 'warehouse_id':
+                        showFormInfo.id = foundProduct.dataValues[Object.keys(foundProduct.dataValues)[i]];
+                        break;
+                    default:
+                        showFormInfo.list[Object.keys(foundProduct.dataValues)[i]] = foundProduct.dataValues[Object.keys(foundProduct.dataValues)[i]];
+                };
+            }
+        }
+        //NOTE DEFINE HERE INSTEAD OF THE PICTURE THE LAT LONG OF THE WAREHOUSE
+
+
+
+        //Luckily, a warehouse can only ever have one inventory record per product
+        // so define it as warehouse_id : {key:val}...
+        // the logic of the front end is it takes in a object of {}
+        //first we check if there are any warehouses with this product via the inventories
+        const wareHouseTableInfo = [];
+        for (let i=0; i< foundProduct.inventories.length; i++)
+        {
+            wareHouseTableInfo.push(foundProduct.inventories[i].warehouse.dataValues);
+            //add in the stock amount
+            wareHouseTableInfo[i].current_stock_level =   foundProduct.inventories[i].dataValues.current_stock_level;
+        };
+        //for both a purchase and transfer form we need every single warehouse
+        //why dont we give name (state)
+        //realistically we should get the capacity but i dont have time to do this check in the end 
+        //also include how much of that item the warehouse currently has 
+        const allWarehouses = await Warehouse.findAll({
+            attributes: ['warehouse_id', 'warehouse_name', 'warehouse_state'],
+        });
+        //lets put this together such that we have 1:warehouse_id, 'warehouse_name,'warehouse_state','current_stock_level' = 0 if none
+        //NOTE this says when i do typeof its an object but i can do array methods, what is this?
+        //lets get from above all warehouses with product in it, lets get their id
+        let warehousesWithProductIds = {};
+        wareHouseTableInfo.forEach(warehouse => {
+            warehousesWithProductIds[warehouse.warehouse_id] = warehouse.current_stock_level
+        });
+        Object.keys(allWarehouses).forEach((warehouseKey) => {
+            //check if the warehouse id is in the withproduct obj we made above, if so throw it the currentstockval
+            if (Object.keys(warehousesWithProductIds).includes(  allWarehouses[warehouseKey].warehouse_id.toString())){
+                //theres got to be a better way but im looping through and dynamically assinging the formatted one. I tried just directly adding 
+                // to the all warehouses but wasnt working
+                
+                allWarehouses[warehouseKey].dataValues.current_stock_level = warehousesWithProductIds[allWarehouses[warehouseKey].warehouse_id];
+            }
+            else{
+                allWarehouses[warehouseKey].dataValues.current_stock_level = 0;
+            }
+        });
+        //For purchasing you also need to know how much money our main user has 
+        const ownerMoneyQuery = await Owner.findOne({
+            // we always use the first user
+            where: [{owner_id : 1}],
+            attributes:[ 'starting_money','total_expenditures', 'total_revenue']
+        });
+        let ownerMoney = ownerMoneyQuery.starting_money - ownerMoneyQuery.total_expenditures + ownerMoneyQuery.total_revenue;
+        //what we need here: we need allwarehouses and ownermoney
+        const  purchaseTransferForm = {
+            allWarehouses : allWarehouses,
+            ownerMoney : ownerMoney,
+        };
+        const sentData = {
+            showFormInfo   : showFormInfo,
+            associateTable : wareHouseTableInfo,
+            purchaseForm   : purchaseTransferForm
+        };
+
+        /////Rhionna we are starting here to make the product performance analytics 
+        //things we need: the total quantity of products across all inventories
+        //                the total number of sales this product has had 
+        //                the return from stock price versus sell price
+        //                the location in which it is most successfull
+        //                a graph that shows over the post 30 days when it has been purchased
+        analyticsObject = {
+            quantity:0,
+            quantitySold: 0,
+
+        };
+        foundProduct.dataValues.inventories.forEach((inventory) => {
+            //this is may mapping function
+            analyticsObject.quantity =  analyticsObject.quantity + inventory.dataValues.current_stock_level;
+        })//accepts a callback)
+        const foundDeliveries = await Delivery_Detail.findAll({
+            where: {product_id: req.params.id},
+            attributes: ['quantity'],
+        });
+        foundDeliveries.forEach((delivery) => {
+            //this is may mapping function
+            analyticsObject.quantitySold =  analyticsObject.quantitySold + delivery.dataValues.quantity;
+        })
+        res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+        res.status(200).json(sentData);
+    } catch (err) {
+        console.log(err)
+        res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+        res.status(500).json(err)
+    }
 });
 
 

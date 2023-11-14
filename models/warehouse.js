@@ -30,6 +30,7 @@ module.exports = (sequelize, DataTypes) => {
   Warehouse.init({
     warehouse_id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
     warehouse_name: { type:DataTypes.STRING, allowNull:false},
+    warehouse_description: { type: DataTypes.TEXT, allowNull:false},
     warehouse_address: {type: DataTypes.STRING, allowNull: false},
     warehouse_city: {type:DataTypes.STRING,allowNull:false},
     warehouse_state: {type: DataTypes.ENUM, allowNull: false, values: ['AK',

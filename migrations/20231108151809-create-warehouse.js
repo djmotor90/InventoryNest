@@ -13,6 +13,10 @@ module.exports = {
         allowNull: false,
         type: Sequelize.STRING
       },
+      warehouse_description: {
+        allowNull: false,
+        type: Sequelize.TEXT
+      },
       warehouse_address: {
         allowNull: false,
         type: Sequelize.STRING

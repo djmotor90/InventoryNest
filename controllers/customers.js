@@ -36,48 +36,6 @@ customers.get('/', async (req,res) => {
         res.status(500).json(err);
     };
 });
-//GETS a form for creating a new customer
-customers.get('/new', async (req, res) => {
-    let formInfo = {}
-    //look into the database and find the appropriate fields
-    //send over a json of the following structure
-    // field name : fieldtype, fieldrequirements (so like if ENUM give it the array), isAllowNull
-    Object.keys(Customer.rawAttributes).forEach( key =>{
-        let value = null;
-        switch (Customer.rawAttributes[key].type.toString())
-        {
-            case 'DATE':
-                value = ['date', []]
-                break;
-            case 'ENUM':
-                value = ['select',  Customer.rawAttributes[key].values];
-                break;
-            case 'FLOAT':
-            case 'INTEGER':
-                //check if primary key, break out 
-                value = !Customer.rawAttributes[key].primaryKey ? ['number', []] : null; 
-                 //later you could put min max in there, int, break this off into sep ints and floats, etc
-                break;
-            case 'VARCHAR(255)': //thus far we havent defined any limits to size and dont plan on it, but this can be converted into a regex
-                //TODO eventually will have to deal with filename and make value file
-                value = ['text', []];
-                break;
-            case 'TEXT':
-                value = ['textarea', []];
-                break;
-        }
-        //Now loop through and add if this input is required or not
-        //remember this is allow null not required
-        if (value !== null)
-        {
-            //if the model doesnt say, make it allow null
-            value.push(Customer.rawAttributes[key].allowNull === undefined ? true : Customer.rawAttributes[key].allowNull);
-            formInfo[key] = value;
-        }
-    });
-    res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
-    res.status(200).json(formInfo);
-});
 //POSTS the new customer creation
 //Note: i have not implemented aws file uploading yet, so just remove the filename from the req.body eventually
 customers.post('/', async (req, res) => {
@@ -129,6 +87,48 @@ customers.post('/', async (req, res) => {
         res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
         res.status(500).json(err);
     }
+});
+//GETS a form for creating a new customer
+customers.get('/new', async (req, res) => {
+    let formInfo = {}
+    //look into the database and find the appropriate fields
+    //send over a json of the following structure
+    // field name : fieldtype, fieldrequirements (so like if ENUM give it the array), isAllowNull
+    Object.keys(Customer.rawAttributes).forEach( key =>{
+        let value = null;
+        switch (Customer.rawAttributes[key].type.toString())
+        {
+            case 'DATE':
+                value = ['date', []]
+                break;
+            case 'ENUM':
+                value = ['select',  Customer.rawAttributes[key].values];
+                break;
+            case 'FLOAT':
+            case 'INTEGER':
+                //check if primary key, break out 
+                value = !Customer.rawAttributes[key].primaryKey ? ['number', []] : null; 
+                 //later you could put min max in there, int, break this off into sep ints and floats, etc
+                break;
+            case 'VARCHAR(255)': //thus far we havent defined any limits to size and dont plan on it, but this can be converted into a regex
+                //TODO eventually will have to deal with filename and make value file
+                value = ['text', []];
+                break;
+            case 'TEXT':
+                value = ['textarea', []];
+                break;
+        }
+        //Now loop through and add if this input is required or not
+        //remember this is allow null not required
+        if (value !== null)
+        {
+            //if the model doesnt say, make it allow null
+            value.push(Customer.rawAttributes[key].allowNull === undefined ? true : Customer.rawAttributes[key].allowNull);
+            formInfo[key] = value;
+        }
+    });
+    res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+    res.status(200).json(formInfo);
 });
 
 module.exports = customers;
