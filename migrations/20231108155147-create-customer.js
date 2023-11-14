@@ -17,9 +17,6 @@ module.exports = {
         allowNull: false,
         type: Sequelize.STRING
       },
-      customer_purchase_count: {
-        type: Sequelize.INTEGER
-      },
       customer_address: {
         allowNull: false,
         type: Sequelize.STRING

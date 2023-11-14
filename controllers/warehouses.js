@@ -36,16 +36,63 @@ warehouses.get('/', async (req,res) => {
         res.status(500).json(err);
     };
 });
-//Post a new entry to the database
+//Post new route: a new warehouse to the database
 warehouses.post('/', async (req, res) => {
-    //adding an entry 
-    //here you should do backend validation
-
+    try {
+        //TODO back end data validation
+        let sqlData = req.body;
+        const newWarehouse = await Warehouse.create(sqlData);
+        let warehouse_id =  newWarehouse.warehouse_id;
+        res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+        res.status(201). res.status(201).json({message:'totaladdsuccess' , id:warehouse_id});
+    } catch (err) {
+        //do some err
+        console.error(err);
+        res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+        res.status(500).json(err);
+    }
 });
-
 //Creation Route: simply needs to send over the appropriate fields and any field constraints
 warehouses.get('/new', async (req, res) => {
-    
+    let formInfo = {}
+    //look into the database and find the appropriate fields
+    //send over a json of the following structure
+    // field name : fieldtype, fieldrequirements (so like if ENUM give it the array), isAllowNull
+    Object.keys(Warehouse.rawAttributes).forEach( key =>{
+        let value = null;
+        switch (Warehouse.rawAttributes[key].type.toString())
+        {
+            case 'DATE':
+                value = ['date', []]
+                break;
+            case 'ENUM':
+                value = ['select',  Warehouse.rawAttributes[key].values];
+                break;
+            case 'FLOAT':
+            case 'INTEGER':
+                //check if primary key, break out 
+                value = !Warehouse.rawAttributes[key].primaryKey ? ['number', []] : null; 
+                 //later you could put min max in there, int, break this off into sep ints and floats, etc
+                break;
+            case 'VARCHAR(255)': //thus far we havent defined any limits to size and dont plan on it, but this can be converted into a regex
+                //TODO eventually will have to deal with filename and make value file
+                value = ['text', []];
+                break;
+            case 'TEXT':
+                value = ['textarea', []];
+                break;
+        }
+        //Now loop through and add if this input is required or not
+        //remember this is allow null not required
+        if (value !== null)
+        {
+            //if the model doesnt say, make it allow null
+            value.push(Warehouse.rawAttributes[key].allowNull === undefined ? true : Warehouse.rawAttributes[key].allowNull);
+            formInfo[key] = value;
+        }
+    });
+    res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+    res.status(200).json(formInfo);
 });
 
 

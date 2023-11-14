@@ -16,10 +16,20 @@ require('dotenv').config();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cors());
+//AWS BUCKET CONNECTION //
+const { uploadFile, getFileStream } = require('./s3')
 
 
 //Routes
-//STATIC ROUTE FOR THE LANDING PAGE
+//STATIC ROUTE FOR THE LANDING PAGE or general things
+//any time we fetch an image we use this route
+app.get('/images/:key', (req, res) => {
+    console.log(req.params)
+    const key = req.params.key
+    const readStream = getFileStream(key)
+    readStream.pipe(res)
+  });
+
 app.get('/', async (req, res) => {
     try {
         //first get warehouse information for the card and the map

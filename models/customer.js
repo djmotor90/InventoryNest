@@ -21,7 +21,6 @@ module.exports = (sequelize, DataTypes) => {
     customer_id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true, allowNull: false},
     customer_first_name: {type: DataTypes.STRING, allowNull: false},
     customer_last_name: {type: DataTypes.STRING, allowNull: false},
-    customer_purchase_count: { type:DataTypes.INTEGER, allowNull: true},
     customer_address: { type: DataTypes.STRING, allowNull: false},
     customer_city: {type: DataTypes.STRING, allowNull: false},
     customer_state: {type: DataTypes.ENUM, allowNull: false, values: ['AK',
