@@ -84,55 +84,67 @@ router.get('/customers', async (req, res) => {
     }
   });
 
-  // Get customer orders
+ // Get customer orders with total quantities and amount spent
 router.get('/customerorders', async (req, res) => {
-        try {
-            //annie Note: you dont need this where part, its used only when youre sending a request to filter and or query a result.
-            //here the client is never going to send back a query
-            //first lets populate out our model
-            const allCustomers = await Customer.findAll({
-                attributes: ['customer_id'],
-                include:[
-                {model: Delivery, as: "deliveries",
-                    include: {
-                        model: Delivery_Detail, as: "delivery_details",attributes: ['quantity', 'product_id'],
-                            include:{
-                                model: Product, as : "product",
-                                attributes: ['product_sale_price']
-                            }
-                }},
-                ]
-            });
-            // now we map through every customer and find every delivery they have
-            const allPurchasesByCustomer = allCustomers.map(customer => {
-                //this is what we will return. we sum by constantly adding to indvCustomerObj quantity
-                let indvCustomerObj = { customer_id : customer.dataValues.customer_id,
-                                        quantityPurchased: 0,
-                                        amountSpent      : 0
-                                    }
-                //each customer can have multiple deliveries
-                customer.dataValues.deliveries.forEach(delivery => {
-                    //each delivery can have multiple delivery details
-                    delivery.dataValues.delivery_details.forEach(delivery_detail => {
-                        //lets go and add it to our count
-                        indvCustomerObj.quantityPurchased = indvCustomerObj.quantityPurchased + delivery_detail.dataValues.quantity;
-                        //thank god delivery detail to product is one to one so we dont need another nested forEach, we just have 
-                        //to multiply the quantity by the product sale price
-                        indvCustomerObj.amountSpent = indvCustomerObj.amountSpent + (delivery_detail.dataValues.quantity * delivery_detail.dataValues.product.dataValues.product_sale_price);
-                    })
-                });
-                //give it back an object of what we care about
-                return indvCustomerObj;
-            });
-      
-          res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
-          res.status(200).json(allPurchasesByCustomer);
-     } catch (err) {
-       console.error(err); // Log any errors to the console for debugging
-       res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
-       res.status(500).json(err);
-     }
- });
+    try {
+      // Populate our model
+      const allCustomers = await Customer.findAll({
+        attributes: ['customer_id', 'customer_first_name', 'customer_last_name'],
+        include: [
+          {
+            model: Delivery,
+            as: "deliveries",
+            include: {
+              model: Delivery_Detail,
+              as: "delivery_details",
+              attributes: ['quantity', 'product_id'],
+              include: {
+                model: Product,
+                as: "product",
+                attributes: ['product_sale_price']
+              }
+            },
+          },
+        ],
+      });
+  
+      // Map through every customer and find every delivery they have
+      const allPurchasesByCustomer = allCustomers.map(customer => {
+        // This is what we will return. We sum by constantly adding to indvCustomerObj quantity
+        let indvCustomerObj = {
+          customer_id: customer.dataValues.customer_id,
+          customer_first_name: customer.dataValues.customer_first_name,
+          customer_last_name: customer.dataValues.customer_last_name,
+          quantityPurchased: 0,
+          amountSpent: 0
+        };
+  
+        // Each customer can have multiple deliveries
+        customer.dataValues.deliveries.forEach(delivery => {
+          // Each delivery can have multiple delivery details
+          delivery.dataValues.delivery_details.forEach(delivery_detail => {
+            // Let's go and add it to our count
+            indvCustomerObj.quantityPurchased = indvCustomerObj.quantityPurchased + delivery_detail.dataValues.quantity;
+            // Thank god delivery detail to product is one to one, so we don't need another nested forEach,
+            // we just have to multiply the quantity by the product sale price
+            indvCustomerObj.amountSpent = indvCustomerObj.amountSpent + (delivery_detail.dataValues.quantity * delivery_detail.dataValues.product.dataValues.product_sale_price);
+          })
+        });
+  
+        // Filter out customers with quantity less than or equal to 0
+        return indvCustomerObj.quantityPurchased > 0 ? indvCustomerObj : null;
+      }).filter(Boolean); // Remove null values
+  
+      res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+      res.status(200).json(allPurchasesByCustomer);
+    } catch (err) {
+      console.error(err); // Log any errors to the console for debugging
+      res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+      res.status(500).json(err);
+    }
+  });
+  
+  
   
 
 
@@ -272,47 +284,47 @@ router.get('/customerorders', async (req, res) => {
 
 
 // Get customer data along with the sum of quantities for each customer
-router.get('/customerorders', async (req, res) => {
-    try {
-      // Search through the queries and find those which match a column name from the customer model
-      const columnNames = Object.keys(Customer.rawAttributes);
-      let whereObject = {};
-      for (let i = 0; i < Object.keys(req.query).length; i++) {
-        if (columnNames.includes(Object.keys(req.query)[i])) {
-          whereObject[Object.keys(req.query)[i]] = req.query[Object.keys(req.query)[i]]; // Fix this line
-        }
-      }
+// router.get('/customerorders', async (req, res) => {
+//     try {
+//       // Search through the queries and find those which match a column name from the customer model
+//       const columnNames = Object.keys(Customer.rawAttributes);
+//       let whereObject = {};
+//       for (let i = 0; i < Object.keys(req.query).length; i++) {
+//         if (columnNames.includes(Object.keys(req.query)[i])) {
+//           whereObject[Object.keys(req.query)[i]] = req.query[Object.keys(req.query)[i]]; // Fix this line
+//         }
+//       }
   
-      // Include the 'deliveries' association to fetch delivery data for each customer
-      const foundCustomers = await Customer.findAll({
-        where: whereObject,
-        attributes: ['customer_first_name', 'customer_last_name'],
-        include: [
-          {
-            model: Delivery,
-            as: 'deliveries',
-            attributes: [],
-            include: [
-              {
-                model: Delivery_Detail,
-                as: 'delivery_details',
-                attributes: [
-                  [sequelize.fn('SUM', sequelize.col('quantity')), 'total_quantity'],
-                ],
-              },
-            ],
-          },
-        ],
+//       // Include the 'deliveries' association to fetch delivery data for each customer
+//       const foundCustomers = await Customer.findAll({
+//         where: whereObject,
+//         attributes: ['customer_first_name', 'customer_last_name'],
+//         include: [
+//           {
+//             model: Delivery,
+//             as: 'deliveries',
+//             attributes: [],
+//             include: [
+//               {
+//                 model: Delivery_Detail,
+//                 as: 'delivery_details',
+//                 attributes: [
+//                   [sequelize.fn('SUM', sequelize.col('quantity')), 'total_quantity'],
+//                 ],
+//               },
+//             ],
+//           },
+//         ],
         
-      });
+//       });
   
-      res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
-      res.status(200).json(foundCustomers);
-    } catch (err) {
-      res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
-      res.status(500).json(err);
-    }
-  });
+//       res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+//       res.status(200).json(foundCustomers);
+//     } catch (err) {
+//       res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+//       res.status(500).json(err);
+//     }
+//   });
   
   
   
