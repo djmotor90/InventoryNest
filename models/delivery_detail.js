@@ -9,7 +9,7 @@ module.exports = (sequelize, DataTypes) => {
      * This method is not a part of Sequelize lifecycle.
      * The `models/index` file will call this method automatically.
      */
-    static associate({ Delivery, Product, Inventory }) {
+    static associate({ Delivery, Product, Warehouse }) {
       // each Delivery has multiple delivery details
       Delivery_Detail.belongsTo(Delivery, {
           foreignKey:'delivery_id',
@@ -21,9 +21,9 @@ module.exports = (sequelize, DataTypes) => {
           as:"product"
       }),
       //each inventory has multiple inventories
-      Delivery_Detail.belongsTo(Inventory, {
-        foreignKey:'inventory_id',
-        as:"inventory"
+      Delivery_Detail.belongsTo(Warehouse, {
+        foreignKey:'warehouse_id',
+        as:"warehouse"
       })
     }
   }
@@ -32,8 +32,9 @@ module.exports = (sequelize, DataTypes) => {
     delivery_id: DataTypes.INTEGER,
     product_id: DataTypes.INTEGER,
     //TODO this is going to be a problem later down the road since inventories can be deleted for keeping track of delivieries, rpobably need to switch to warehouses
-    inventory_id: DataTypes.INTEGER,
+    warehouse_id: DataTypes.INTEGER,
     quantity: DataTypes.INTEGER,
+    //this is going to catch the price at the time in case it ever changeds
     total_price: DataTypes.FLOAT
   }, {
     sequelize,

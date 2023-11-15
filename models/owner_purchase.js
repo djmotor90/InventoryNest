@@ -24,11 +24,12 @@ module.exports = (sequelize, DataTypes) => {
   }
   }
   Owner_Purchase.init({
-
+    owner_purchase_id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
     product_id: DataTypes.INTEGER,
     warehouse_id: DataTypes.INTEGER,
     quantity: DataTypes.INTEGER,
     product_price_at_the_time: DataTypes.FLOAT
+
   }, {
     sequelize,
     modelName: 'Owner_Purchase',

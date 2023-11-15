@@ -16,7 +16,7 @@ reporting.get('/customerorders', async (req, res) => {
             include:[
             {model: Delivery, as: "deliveries",
                 include: {
-                    model: Delivery_Detail, as: "delivery_details",attributes: ['quantity', 'product_id'],
+                    model: Delivery_Detail, as: "delivery_details",attributes: ['quantity', 'total_price'],
                         include:{
                             model: Product, as : "product",
                             attributes: ['product_sale_price']

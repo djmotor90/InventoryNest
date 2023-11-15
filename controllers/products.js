@@ -3,7 +3,7 @@ const products     = require('express').Router();
 const { response } = require('express');
 const db           = require('../models');
 const { Op }       = require('sequelize');
-const { Product, Inventory, Warehouse, Owner, Transfer, Delivery_Detail } = db;
+const { Product, Inventory, Warehouse, Owner, Transfer, Delivery_Detail, Owner_Purchase } = db;
 
 
 
@@ -18,7 +18,7 @@ products.get('/', async (req,res) => {
     try {
         //search through the queries and find those which match a column name from the 
         const columnNames = Object.keys(Product.rawAttributes);
-        let whereObject = {};
+        let whereObject = { isSoftDeleted : {[Op.eq]: null}};
         for (let i=0; i< Object.keys(req.query).length; i++)
         {
             if (columnNames.includes(Object.keys(req.query)[i]))
@@ -135,11 +135,11 @@ products.get('/:id', async (req,res) => {
         //provide every warehouse as well that it is located in and the amount
         const foundProduct = await Product.findOne({
             where: {product_id: req.params.id},
-            attributes: {exclude: ['createdAt', 'updatedAt']},
+            attributes: {exclude: ['createdAt', 'updatedAt', 'isSoftDeleted']},
             include:[
                 {model: Inventory, as: "inventories", attributes: ['current_stock_level'],
                     include: {
-                        model: Warehouse, as: "warehouse",attributes: {exclude: ['createdAt', 'updatedAt']}
+                        model: Warehouse, as: "warehouse",attributes: {exclude: ['createdAt', 'updatedAt', 'isSoftDeleted']}
                 }},
             ]
         });
@@ -265,6 +265,7 @@ products.post('/:id', async (req,res) => {
                 //TODO backend validation
                 //for now lets assume its ok 
                 //first lets add the cost to our owner profile
+                let price = ''
                 try{
                     const OwnerProfile = await Owner.findOne({
                         where: {owner_id : 1} 
@@ -273,6 +274,8 @@ products.post('/:id', async (req,res) => {
                         where: {product_id : req.body.product_id},
                         attributes:['product_provider_price']
                     });
+                    //define above for later
+                    price = productPrice.dataValues.product_provider_price;
                     if (OwnerProfile.starting_money + OwnerProfile.total_revenue
                          - OwnerProfile.total_expenditures - (productPrice.product_provider_price * parseInt(req.body.amount)) < 0){
                             //TODO make this the custom error for you dont have enough money, as there can be other errors this may catch
@@ -309,9 +312,15 @@ products.post('/:id', async (req,res) => {
                         current_stock_level: req.body.amount,
                         //this is a variable we arent using rn but ill give it a value anyways
                         minimum_stock_level: 5,
-
                     });
                 }
+                //Now make your owner purchase entry
+                const addedPurchaseReceipt = await Owner_Purchase.create({
+                    warehouse_id              : req.body.warehouse_id,
+                    product_id                : req.body.product_id,
+                    quantity                  : req.body.amount,
+                    product_price_at_the_time : price
+                });
                 res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
                 res.status(201).json({message:'Your Purchase Was Successful'});
                 break;

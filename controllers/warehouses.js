@@ -12,12 +12,6 @@ const geocoder = nodeGeocoder({provider: 'google',apiKey: process.env.ADDRESS_AP
 
 
 //STATIC ROUTES
-warehouses.get('/loc', async (req,res) => {
-    const test = await geocoder.geocode('29 champs elysée paris');
-    test[0].latitude;
-    test[0].longitude;
-    console.log(test);
-})
 //Home route: simply needs to send over all table data to populate a table
 warehouses.get('/', async (req,res) => {
     // Show a table of all products, therefore need to send over all the data
@@ -28,7 +22,7 @@ warehouses.get('/', async (req,res) => {
         //WHAT THIS WILL EVENTUALLY HAVE TO DO: handle when we have queried data coming back 
         //search through the queries and find those which match a column name from the 
         const columnNames = Object.keys(Product.rawAttributes);
-        let whereObject = {};
+        let whereObject = { isSoftDeleted : {[Op.eq]: null}};
         for (let i=0; i< Object.keys(req.query).length; i++)
         {
             if (columnNames.includes(Object.keys(req.query)[i]))
@@ -39,7 +33,7 @@ warehouses.get('/', async (req,res) => {
         //you will eventually have to rewrite out the where here dynamically
         const foundProducts = await Warehouse.findAll({
             where: whereObject,
-            attributes: {exclude: ['createdAt', 'updatedAt']}
+            attributes: {exclude: ['createdAt', 'updatedAt', 'isSoftDeleted']}
         });
         res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
         res.status(200).json(foundProducts);
@@ -113,11 +107,11 @@ warehouses.get('/:id', async (req,res) => {
         //provide every product within an individual warehouse as well
         const foundWarehouse = await Warehouse.findOne({
             where: {warehouse_id: req.params.id},
-            attributes: {exclude: ['createdAt', 'updatedAt']},
+            attributes: {exclude: ['createdAt', 'updatedAt','isSoftDeleted']},
             include:[
                 {model: Inventory, as: "inventories", attributes: {exclude: ['createdAt', 'updatedAt']},
                     include: {
-                        model: Product, as: "product", attributes: {exclude: ['createdAt', 'updatedAt']}
+                        model: Product, as: "product", attributes: {exclude: ['createdAt', 'updatedAt', 'isSoftDeleted']}
                 }},
             ]
         });
@@ -220,28 +214,12 @@ warehouses.get('/:id', async (req,res) => {
         res.status(500).json(err)
     }
 });
-
-
-
-//Singular Product form: needs to show all product information 
-warehouses.get('/:id', async (req,res) => {
-    try {
-        //provide every warehouse as well that it is located in and the amount
-        const foundWarehouse = await Warehouse.findOne({
-            where: {warehouse_id: req.params.id},
-            include:[
-                {model: Inventory, as: "inventories", include: {
-                    model: Product, as: "product",
-                }},
-            ]
-        });
-        //todo: it may also make sense to include all transfer history (in v out), or this could be in a seperate place
-        res.status(200).json(foundWarehouse)
-    } catch (err) {
-        res.status(500).json(err)
-    }
-});
+//update a warehouse entry
 warehouses.put('/:id', async(req,res) => {
+    //update the entry 
+    //here you should do backend validation 
+});
+warehouses.post('/:id', async(req,res) => {
     //update the entry 
     //here you should do backend validation 
 });
@@ -264,17 +242,5 @@ warehouses.delete('/:id', async(req,res) => {
         res.status(500).json(err);  
     }
 });
-
-//Purpose: transfers products from one warehouse to another. From the original warehouse/:id page, there will be a button that says "transfer"
-//this will show all products within warehouse a that you can select from, and then a dropdown to choose the warehouse you are bringing it to.
-//allow them to select multiple
-warehouses.get('/:id/transfer', async(req,res) => {
-    try {
-        
-    } catch (error) {
-        
-    }
-});
-
 
 module.exports = warehouses;
