@@ -76,7 +76,8 @@ module.exports = (sequelize, DataTypes) => {
     'WY'
     ]},
     customer_zipcode: {type: DataTypes.INTEGER, allowNull: false},
-    customer_picture_filename: {type: DataTypes.STRING, allowNull: true}
+    customer_picture_filename: {type: DataTypes.STRING, allowNull: true},
+    isSoftDeleted: {type: DataTypes.BOOLEAN, allowNull:true}
   }, {
     sequelize,
     modelName: 'Customer',

@@ -88,6 +88,10 @@ module.exports = {
       customer_picture_filename: {
         type: Sequelize.STRING
       },
+      isSoftDeleted: {
+        allowNull: true,
+        type: Sequelize.BOOLEAN
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE

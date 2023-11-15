@@ -28,11 +28,16 @@ function uploadFile(file) {
   
   // downloads a file from s3
   function getFileStream(fileKey) {
-    const downloadParams = {
-      Key: fileKey,
-      Bucket: process.env.BUCKET_NAME
+    try{
+        const downloadParams = {
+          Key: fileKey,
+          Bucket: process.env.BUCKET_NAME
+        }
+        return s3.getObject(downloadParams).createReadStream()
+    }catch(err){
+        console.error(err);
+        return null;
     }
-  
-    return s3.getObject(downloadParams).createReadStream()
+
   }
   exports.getFileStream = getFileStream

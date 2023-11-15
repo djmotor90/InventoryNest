@@ -88,6 +88,10 @@ module.exports = {
       warehouse_capacity: {
         type: Sequelize.FLOAT
       },
+      isSoftDeleted: {
+        allowNull: true,
+        type: Sequelize.BOOLEAN
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE

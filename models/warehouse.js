@@ -30,7 +30,7 @@ module.exports = (sequelize, DataTypes) => {
   Warehouse.init({
     warehouse_id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
     warehouse_name: { type:DataTypes.STRING, allowNull:false},
-    //warehouse_description: { type: DataTypes.TEXT, allowNull:false},
+    warehouse_description: { type: DataTypes.TEXT, allowNull:false}, //TODO eventually it would make sense to add this
     warehouse_address: {type: DataTypes.STRING, allowNull: false},
     warehouse_city: {type:DataTypes.STRING,allowNull:false},
     warehouse_state: {type: DataTypes.ENUM, allowNull: false, values: ['AK',
@@ -86,7 +86,8 @@ module.exports = (sequelize, DataTypes) => {
     'WY'
     ]},
     warehouse_zipcode: { type: DataTypes.INTEGER, allowNull: false},
-    warehouse_capacity: {type: DataTypes.FLOAT, allowNull: true}
+    warehouse_capacity: {type: DataTypes.FLOAT, allowNull: true},
+    isSoftDeleted: {type: DataTypes.BOOLEAN, allowNull:true}
   }, {
     sequelize,
     modelName: 'Warehouse',

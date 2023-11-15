@@ -7,12 +7,11 @@ module.exports = {
       {
         customer_first_name: "Barack",
         customer_last_name: "Obama",
-        
         customer_address: "5235 S Harper Ct Suite 1140",
         customer_city: "Chicago",
         customer_state: "IL",
         customer_zipcode: 60615,
-        customer_picture_filename: "",
+        customer_picture_filename: "4.jpg",
         createdAt: new Date(),
         updatedAt: new Date()
       },
@@ -20,12 +19,11 @@ module.exports = {
     {
       customer_first_name: "Ethan",
       customer_last_name: "Martinez",
-      
       customer_address: "4200 N Lamar Blvd",
       customer_city: "Austin",
       customer_state: "TX",
       customer_zipcode: 78756,
-      customer_picture_filename: "",
+      customer_picture_filename: "3.jpg",
       createdAt: new Date(),
       updatedAt: new Date()
   },
@@ -33,12 +31,11 @@ module.exports = {
   {
       customer_first_name: "Sophia",
       customer_last_name: "Lee",
-      
       customer_address: "2100 Pacific Ave",
       customer_city: "San Francisco",
       customer_state: "CA",
       customer_zipcode: 94115,
-      customer_picture_filename: "",
+      customer_picture_filename: "2.jpg",
       createdAt: new Date(),
       updatedAt: new Date()
   },
@@ -46,12 +43,11 @@ module.exports = {
   {
       customer_first_name: "Olivia",
       customer_last_name: "Hernandez",
-      
       customer_address: "3708 Las Vegas Blvd S",
       customer_city: "Las Vegas",
       customer_state: "NV",
       customer_zipcode: 89109,
-      customer_picture_filename: "",
+      customer_picture_filename: "1.jpg",
       createdAt: new Date(),
       updatedAt: new Date()
   },
@@ -59,12 +55,11 @@ module.exports = {
   {
       customer_first_name: "William",
       customer_last_name: "Anderson",
-      
       customer_address: "1600 Exposition Blvd",
       customer_city: "Sacramento",
       customer_state: "CA",
       customer_zipcode: 95815,
-      customer_picture_filename: "",
+      customer_picture_filename: "9.jpg",
       createdAt: new Date(),
       updatedAt: new Date()
   },
@@ -72,12 +67,11 @@ module.exports = {
   {
       customer_first_name: "Isabella",
       customer_last_name: "Kim",
-      
       customer_address: "401 Biscayne Blvd",
       customer_city: "Miami",
       customer_state: "FL",
       customer_zipcode: 33132,
-      customer_picture_filename: "",
+      customer_picture_filename: "8.jpg",
       createdAt: new Date(),
       updatedAt: new Date()
   },
@@ -85,12 +79,11 @@ module.exports = {
   {
       customer_first_name: "Jacob",
       customer_last_name: "Young",
-      
       customer_address: "600 E Grand Ave",
       customer_city: "Chicago",
       customer_state: "IL",
       customer_zipcode: 60611,
-      customer_picture_filename: "",
+      customer_picture_filename: "7.jpg",
       createdAt: new Date(),
       updatedAt: new Date()
   },
@@ -103,7 +96,7 @@ module.exports = {
       customer_city: "Tampa",
       customer_state: "FL",
       customer_zipcode: 33607,
-      customer_picture_filename: "",
+      customer_picture_filename: "6.jpg",
       createdAt: new Date(),
       updatedAt: new Date()
   },
@@ -116,7 +109,7 @@ module.exports = {
       customer_city: "Austin",
       customer_state: "TX",
       customer_zipcode: 78746,
-      customer_picture_filename: "",
+      customer_picture_filename: "5.jpg",
       createdAt: new Date(),
       updatedAt: new Date()
   },
@@ -129,7 +122,7 @@ module.exports = {
       customer_city: "Philadelphia",
       customer_state: "PA",
       customer_zipcode: 19106,
-      customer_picture_filename: "",
+      customer_picture_filename: "4.jpg",
       createdAt: new Date(),
       updatedAt: new Date()
   },
@@ -142,7 +135,7 @@ module.exports = {
       customer_city: "Denver",
       customer_state: "CO",
       customer_zipcode: 80204,
-      customer_picture_filename: "",
+      customer_picture_filename: "3.jpg",
       createdAt: new Date(),
       updatedAt: new Date()
   },
@@ -155,7 +148,7 @@ module.exports = {
     customer_city: "Seattle",
     customer_state: "WA",
     customer_zipcode: 98121,
-    customer_picture_filename: "",
+    customer_picture_filename: "2.jpg",
     createdAt: new Date(),
     updatedAt: new Date()
 },
@@ -168,7 +161,7 @@ module.exports = {
     customer_city: "Baltimore",
     customer_state: "MD",
     customer_zipcode: 21201,
-    customer_picture_filename: "",
+    customer_picture_filename: "1.jpg",
     createdAt: new Date(),
     updatedAt: new Date()
 },
@@ -181,7 +174,7 @@ module.exports = {
     customer_city: "San Francisco",
     customer_state: "CA",
     customer_zipcode: 94109,
-    customer_picture_filename: "",
+    customer_picture_filename: "9.jpg",
     createdAt: new Date(),
     updatedAt: new Date()
 },
@@ -194,7 +187,7 @@ module.exports = {
     customer_city: "Los Angeles",
     customer_state: "CA",
     customer_zipcode: 90012,
-    customer_picture_filename: "",
+    customer_picture_filename: "8.jpg",
     createdAt: new Date(),
     updatedAt: new Date()
 },
@@ -207,7 +200,7 @@ module.exports = {
     customer_city: "Seattle",
     customer_state: "WA",
     customer_zipcode: 98134,
-    customer_picture_filename: "",
+    customer_picture_filename: "7.jpg",
     createdAt: new Date(),
     updatedAt: new Date()
 },
@@ -220,7 +213,7 @@ module.exports = {
     customer_city: "Glendale",
     customer_state: "AZ",
     customer_zipcode: 85305,
-    customer_picture_filename: "",
+    customer_picture_filename: "6.jpg",
     createdAt: new Date(),
     updatedAt: new Date()
 },
@@ -233,7 +226,7 @@ module.exports = {
     customer_city: "Eugene",
     customer_state: "OR",
     customer_zipcode: 97401,
-    customer_picture_filename: "",
+    customer_picture_filename: "5.jpg",
     createdAt: new Date(),
     updatedAt: new Date()
 },
@@ -246,7 +239,7 @@ module.exports = {
     customer_city: "Green Bay",
     customer_state: "WI",
     customer_zipcode: 54304,
-    customer_picture_filename: "",
+    customer_picture_filename: "4.jpg",
     createdAt: new Date(),
     updatedAt: new Date()
 },
@@ -259,7 +252,7 @@ module.exports = {
     customer_city: "St. Louis",
     customer_state: "MO",
     customer_zipcode: 63102,
-    customer_picture_filename: "",
+    customer_picture_filename: "3.jpg",
     createdAt: new Date(),
     updatedAt: new Date()
 },
@@ -272,7 +265,7 @@ module.exports = {
     customer_city: "New York",
     customer_state: "NY",
     customer_zipcode: 10001,
-    customer_picture_filename: "",
+    customer_picture_filename: "2.jpg",
     createdAt: new Date(),
     updatedAt: new Date()
 },
@@ -285,7 +278,7 @@ module.exports = {
   customer_city: "Phoenix",
   customer_state: "AZ",
   customer_zipcode: 85016,
-  customer_picture_filename: "",
+  customer_picture_filename: "1.jpg",
   createdAt: new Date(),
   updatedAt: new Date()
 },
@@ -298,7 +291,7 @@ module.exports = {
   customer_city: "San Antonio",
   customer_state: "TX",
   customer_zipcode: 78205,
-  customer_picture_filename: "",
+  customer_picture_filename: "9.jpg",
   createdAt: new Date(),
   updatedAt: new Date()
 },
@@ -311,7 +304,7 @@ module.exports = {
   customer_city: "Washington",
   customer_state: "DC",
   customer_zipcode: 20003,
-  customer_picture_filename: "",
+  customer_picture_filename: "8.jpg",
   createdAt: new Date(),
   updatedAt: new Date()
 },
@@ -324,7 +317,7 @@ module.exports = {
   customer_city: "Nashville",
   customer_state: "TN",
   customer_zipcode: 37213,
-  customer_picture_filename: "",
+  customer_picture_filename: "7.jpg",
   createdAt: new Date(),
   updatedAt: new Date()
 },
@@ -337,7 +330,7 @@ module.exports = {
   customer_city: "Los Angeles",
   customer_state: "CA",
   customer_zipcode: 90015,
-  customer_picture_filename: "",
+  customer_picture_filename: "6.jpg",
   createdAt: new Date(),
   updatedAt: new Date()
 },
@@ -350,7 +343,7 @@ module.exports = {
   customer_city: "St. Louis",
   customer_state: "MO",
   customer_zipcode: 63102,
-  customer_picture_filename: "",
+  customer_picture_filename: "5.jpg",
   createdAt: new Date(),
   updatedAt: new Date()
 },
@@ -363,7 +356,7 @@ module.exports = {
   customer_city: "Baltimore",
   customer_state: "MD",
   customer_zipcode: 21201,
-  customer_picture_filename: "",
+  customer_picture_filename: "4.jpg",
   createdAt: new Date(),
   updatedAt: new Date()
 },
@@ -376,7 +369,7 @@ module.exports = {
   customer_city: "Houston",
   customer_state: "TX",
   customer_zipcode: 77002,
-  customer_picture_filename: "",
+  customer_picture_filename: "3.jpg",
   createdAt: new Date(),
   updatedAt: new Date()
 },
@@ -389,7 +382,7 @@ module.exports = {
   customer_city: "Arlington",
   customer_state: "TX",
   customer_zipcode: 76011,
-  customer_picture_filename: "",
+  customer_picture_filename: "2.jpg",
   createdAt: new Date(),
   updatedAt: new Date()
 },
@@ -402,7 +395,7 @@ module.exports = {
   customer_city: "Detroit",
   customer_state: "MI",
   customer_zipcode: 48201,
-  customer_picture_filename: "",
+  customer_picture_filename: "1.jpg",
   createdAt: new Date(),
   updatedAt: new Date()
 },
@@ -415,7 +408,7 @@ module.exports = {
   customer_city: "Cincinnati",
   customer_state: "OH",
   customer_zipcode: 45202,
-  customer_picture_filename: "",
+  customer_picture_filename: "9.jpg",
   createdAt: new Date(),
   updatedAt: new Date()
 },
@@ -428,7 +421,7 @@ module.exports = {
   customer_city: "Miami",
   customer_state: "FL",
   customer_zipcode: 33125,
-  customer_picture_filename: "",
+  customer_picture_filename: "8.jpg",
   createdAt: new Date(),
   updatedAt: new Date()
 },
@@ -441,7 +434,7 @@ module.exports = {
   customer_city: "Phoenix",
   customer_state: "AZ",
   customer_zipcode: 85004,
-  customer_picture_filename: "",
+  customer_picture_filename: "7.jpg",
   createdAt: new Date(),
   updatedAt: new Date()
 },
@@ -454,7 +447,7 @@ module.exports = {
   customer_city: "New York",
   customer_state: "NY",
   customer_zipcode: 11368,
-  customer_picture_filename: "",
+  customer_picture_filename: "6.jpg",
   createdAt: new Date(),
   updatedAt: new Date()
 },
@@ -467,7 +460,7 @@ module.exports = {
   customer_city: "Atlanta",
   customer_state: "GA",
   customer_zipcode: 30339,
-  customer_picture_filename: "",
+  customer_picture_filename: "5.jpg",
   createdAt: new Date(),
   updatedAt: new Date()
 },
@@ -480,7 +473,7 @@ module.exports = {
   customer_city: "Chicago",
   customer_state: "IL",
   customer_zipcode: 60613,
-  customer_picture_filename: "",
+  customer_picture_filename: "4.jpg",
   createdAt: new Date(),
   updatedAt: new Date()
 },
@@ -493,7 +486,7 @@ module.exports = {
   customer_city: "Oakland",
   customer_state: "CA",
   customer_zipcode: 94621,
-  customer_picture_filename: "",
+  customer_picture_filename: "3.jpg",
   createdAt: new Date(),
   updatedAt: new Date()
 },
@@ -506,7 +499,7 @@ module.exports = {
   customer_city: "Charlotte",
   customer_state: "NC",
   customer_zipcode: 28205,
-  customer_picture_filename: "",
+  customer_picture_filename: "2.jpg",
   createdAt: new Date(),
   updatedAt: new Date()
 },
@@ -514,12 +507,11 @@ module.exports = {
 {
   customer_first_name: "Alexander",
   customer_last_name: "Long",
-  
   customer_address: "1111 Vel R. Phillips Ave",
   customer_city: "Milwaukee",
   customer_state: "WI",
   customer_zipcode: 53203,
-  customer_picture_filename: "",
+  customer_picture_filename: "1.jpg",
   createdAt: new Date(),
   updatedAt: new Date()
 }

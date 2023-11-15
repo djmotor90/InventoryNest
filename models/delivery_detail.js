@@ -31,6 +31,7 @@ module.exports = (sequelize, DataTypes) => {
     delivery_detail_id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
     delivery_id: DataTypes.INTEGER,
     product_id: DataTypes.INTEGER,
+    //TODO this is going to be a problem later down the road since inventories can be deleted for keeping track of delivieries, rpobably need to switch to warehouses
     inventory_id: DataTypes.INTEGER,
     quantity: DataTypes.INTEGER,
     total_price: DataTypes.FLOAT

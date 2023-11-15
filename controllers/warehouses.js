@@ -1,11 +1,23 @@
 //DEPENDENCIES
-const warehouses    = require('express').Router();
-const { response }  = require('express');
-const db            = require('../models');
-const { Warehouse, Inventory, Product } = db;
-const { Op }        = require('sequelize');
+const warehouses                         = require('express').Router();
+const { response }                       = require('express');
+const db                                 = require('../models');
+const { Warehouse, Inventory, Product }  = db;
+const { Op }                             = require('sequelize');
+//for converting an address to latlong
+const nodeGeocoder                       = require('node-geocoder');
+    //initializing the geocoder using my google free tier key
+const geocoder = nodeGeocoder({provider: 'google',apiKey: process.env.ADDRESS_API_KEY, formatter: null});
+
+
 
 //STATIC ROUTES
+warehouses.get('/loc', async (req,res) => {
+    const test = await geocoder.geocode('29 champs elysée paris');
+    test[0].latitude;
+    test[0].longitude;
+    console.log(test);
+})
 //Home route: simply needs to send over all table data to populate a table
 warehouses.get('/', async (req,res) => {
     // Show a table of all products, therefore need to send over all the data
@@ -100,7 +112,7 @@ warehouses.get('/:id', async (req,res) => {
     try {
         //provide every product within an individual warehouse as well
         const foundWarehouse = await Warehouse.findOne({
-            where: {product_id: req.params.id},
+            where: {warehouse_id: req.params.id},
             attributes: {exclude: ['createdAt', 'updatedAt']},
             include:[
                 {model: Inventory, as: "inventories", attributes: {exclude: ['createdAt', 'updatedAt']},
@@ -112,48 +124,56 @@ warehouses.get('/:id', async (req,res) => {
         //seperate what is sent into a form
         //show form only holds the product tables info, so remove all populated data
         const showFormInfo = {list : {}};
-        for (let i=0; i< Object.keys(foundProduct.dataValues).length; i++ ){
+        for (let i=0; i< Object.keys(foundWarehouse.dataValues).length; i++ ){
             //this takes out anything thats an array or object, so we are taking out the populations
-            if (typeof foundProduct.dataValues[Object.keys(foundProduct.dataValues)[i]] !== 'object')
+            if (typeof foundWarehouse.dataValues[Object.keys(foundWarehouse.dataValues)[i]] !== 'object')
             {
                 //for the sake of standardizing this card for the frontend for warehouses and customers, define the pic information and the 
                 //name information and the description (textarea) if it exists
-                switch (Object.keys(foundProduct.dataValues)[i])
+                switch (Object.keys(foundWarehouse.dataValues)[i])
                 {
                     case 'warehouse_name':
                         showFormInfo.name = foundWarehouse.dataValues[Object.keys(foundWarehouse.dataValues)[i]];
                         break;
-                    case 'warehouse_description':
-                        showFormInfo.description = foundProduct.dataValues[Object.keys(foundProduct.dataValues)[i]];
-                        break;
+                    //case 'warehouse_description':
+                    //    showFormInfo.description = foundWarehouse.dataValues[Object.keys(foundProduct.dataValues)[i]];
+                    //    break;
                     case 'warehouse_id':
-                        showFormInfo.id = foundProduct.dataValues[Object.keys(foundProduct.dataValues)[i]];
+                        showFormInfo.id = foundWarehouse.dataValues[Object.keys(foundWarehouse.dataValues)[i]];
                         break;
                     default:
-                        showFormInfo.list[Object.keys(foundProduct.dataValues)[i]] = foundProduct.dataValues[Object.keys(foundProduct.dataValues)[i]];
+                        showFormInfo.list[Object.keys(foundWarehouse.dataValues)[i]] = foundWarehouse.dataValues[Object.keys(foundWarehouse.dataValues)[i]];
                 };
             }
+        };
+        //for now lets make the description just a blank field
+        showFormInfo.description = '';
+        //NOTE in our card we have a spot for pictures, but we dont have any picture for the warehouse, so instead im finding the 
+        //lat long then sending that to the front end to make a google map component
+        try {
+            const geolocatedObj = await geocoder.geocode(foundWarehouse.dataValues.warehouse_address);
+            showFormInfo.picture = [geolocatedObj[0].latitude, geolocatedObj[0].longitude];
+        } catch (err) {
+            //this is probably going to happen if its an invalid address
+            console.log(err)
+            showFormInfo.picture = null;
         }
-        //NOTE DEFINE HERE INSTEAD OF THE PICTURE THE LAT LONG OF THE WAREHOUSE
+        const geolocatedObj = await geocoder.geocode(foundWarehouse.dataValues.warehouse_address);
+        showFormInfo.picture = [geolocatedObj[0].latitude, geolocatedObj[0].longitude];
 
-
-
-        //Luckily, a warehouse can only ever have one inventory record per product
-        // so define it as warehouse_id : {key:val}...
-        // the logic of the front end is it takes in a object of {}
-        //first we check if there are any warehouses with this product via the inventories
-        const wareHouseTableInfo = [];
-        for (let i=0; i< foundProduct.inventories.length; i++)
+       //first extract all information to make a table of all products currently present in a warehouse
+        const productTableInfo = [];
+        for (let i=0; i< foundWarehouse.inventories.length; i++)
         {
-            wareHouseTableInfo.push(foundProduct.inventories[i].warehouse.dataValues);
+            productTableInfo.push(foundWarehouse.inventories[i].product.dataValues);
             //add in the stock amount
-            wareHouseTableInfo[i].current_stock_level =   foundProduct.inventories[i].dataValues.current_stock_level;
+            productTableInfo[i].current_stock_level =   foundWarehouse.inventories[i].dataValues.current_stock_level;
         };
         //for both a purchase and transfer form we need every single warehouse
         //why dont we give name (state)
         //realistically we should get the capacity but i dont have time to do this check in the end 
         //also include how much of that item the warehouse currently has 
-        const allWarehouses = await Warehouse.findAll({
+        /*const allWarehouses = await Warehouse.findAll({
             attributes: ['warehouse_id', 'warehouse_name', 'warehouse_state'],
         });
         //lets put this together such that we have 1:warehouse_id, 'warehouse_name,'warehouse_state','current_stock_level' = 0 if none
@@ -186,36 +206,12 @@ warehouses.get('/:id', async (req,res) => {
         const  purchaseTransferForm = {
             allWarehouses : allWarehouses,
             ownerMoney : ownerMoney,
-        };
+        };*/
         const sentData = {
             showFormInfo   : showFormInfo,
-            associateTable : wareHouseTableInfo,
-            purchaseForm   : purchaseTransferForm
+            associateTable : productTableInfo
+            //purchaseForm   : purchaseTransferForm
         };
-
-        /////Rhionna we are starting here to make the product performance analytics 
-        //things we need: the total quantity of products across all inventories
-        //                the total number of sales this product has had 
-        //                the return from stock price versus sell price
-        //                the location in which it is most successfull
-        //                a graph that shows over the post 30 days when it has been purchased
-        analyticsObject = {
-            quantity:0,
-            quantitySold: 0,
-
-        };
-        foundProduct.dataValues.inventories.forEach((inventory) => {
-            //this is may mapping function
-            analyticsObject.quantity =  analyticsObject.quantity + inventory.dataValues.current_stock_level;
-        })//accepts a callback)
-        const foundDeliveries = await Delivery_Detail.findAll({
-            where: {product_id: req.params.id},
-            attributes: ['quantity'],
-        });
-        foundDeliveries.forEach((delivery) => {
-            //this is may mapping function
-            analyticsObject.quantitySold =  analyticsObject.quantitySold + delivery.dataValues.quantity;
-        })
         res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
         res.status(200).json(sentData);
     } catch (err) {
