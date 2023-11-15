@@ -9,18 +9,19 @@ module.exports = (sequelize, DataTypes) => {
      * This method is not a part of Sequelize lifecycle.
      * The `models/index` file will call this method automatically.
      */
-    static associate(models) {
-      //each purchase entry belongs to one warehouse
-      Inventory.belongsTo(Warehouse,{
-        foreignKey:'warehouse_id',
-        as:"warehouse"
-      }),
-      //each purchase entry belongs to one product
-      Inventory.belongsTo(Product, {
-        foreignKey:'product_id',
-        as:"product"
-      }),
-}
+  static associate(models) {
+    //each purchase entry belongs to one warehouse
+    Owner_Purchase.belongsTo(Warehouse,{
+      foreignKey:'warehouse_id',
+      as:"warehouse"
+    }),
+    //each purchase entry belongs to one product
+    Owner_Purchase.belongsTo(Product, {
+      foreignKey:'product_id',
+      as:"product"
+    })
+    //NOTE: THeres only one owner so we dont need the owner has many purchases or the owner id here
+  }
   }
   Owner_Purchase.init({
 
