@@ -143,193 +143,67 @@ router.get('/customerorders', async (req, res) => {
       res.status(500).json(err);
     }
   });
+ 
+  router.get('/:id', async (req, res) => {
+    try {
+      const ownerId = req.params.id;
   
+      // Find the owner by ID
+      const owner = await Owner.findByPk(ownerId);
   
+      if (!owner) {
+        res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+        return res.status(404).json({ message: 'Owner not found' });
+      }
   
-
-
-// Get customer data along with associated deliveries
-// router.get('/customerorders', async (req, res) => {
-//     try {
-//       // Search through the queries and find those which match a column name from the customer model
-//       const columnNames = Object.keys(Customer.rawAttributes);
-//       let whereObject = {};
-//       for (let i = 0; i < Object.keys(req.query).length; i++) {
-//         if (columnNames.includes(Object.keys(req.query)[i])) {
-//           whereObject[Object.keys(req.query)[i]] = req.query[Object.keys(req.query)[i]]; // Fix this line
-//         }
-//       }
+      res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+      res.status(200).json(owner);
+    } catch (err) {
+      res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+      res.status(500).json(err);
+    }
+  });
   
-//       // Include the 'deliveries' association to fetch delivery data for each customer
-//       const foundCustomers = await Customer.findAll({
-//         where: whereObject,
-//         include: [
-//           {
-//             model: Delivery,
-//             as: 'deliveries',
-//             include: [{ model: Delivery_Detail, as: 'delivery_details' }],
-//           },
-//         ],
-//       });
+  // Get a product by ID
+  router.get('/products/:id', async (req, res) => {
+    try {
+      const productId = req.params.id;
   
-//       res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
-//       res.status(200).json(foundCustomers);
-//     } catch (err) {
-//       res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
-//       res.status(500).json(err);
-//     }
-//   });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// Get customer data along with associated deliveries and total quantity
-// router.get('/customerorders', async (req, res) => {
-//     try {
-//       // Search through the queries and find those which match a column name from the customer model
-//       const columnNames = Object.keys(Customer.rawAttributes);
-//       let whereObject = {};
-//       for (let i = 0; i < Object.keys(req.query).length; i++) {
-//         if (columnNames.includes(Object.keys(req.query)[i])) {
-//           whereObject[Object.keys(req.query)[i]] = req.query[Object.keys(req.query)[i]];
-//         }
-//       }
+      // Find the product by ID
+      const product = await Product.findByPk(productId);
   
-//       // Include the 'deliveries' association to fetch delivery data for each customer
-//       const foundCustomers = await Customer.findAll({
-//         where: whereObject,
-//         attributes: ['customer_first_name', 'customer_last_name'], // Select only the desired attributes
-//         include: [
-//           {
-//             model: Delivery,
-//             as: 'deliveries',
-//             include: [
-//               {
-//                 model: Delivery_Detail,
-//                 as: 'delivery_details',
-//                 attributes: [
-//                   [sequelize.fn('sum', sequelize.col('quantity')), 'total_quantity'],
-//                 ],
-//               },
-//             ],
-//           },
-//         ],
-//       });
+      if (!product) {
+        res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+        return res.status(404).json({ message: 'Product not found' });
+      }
   
-//       res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
-//       res.status(200).json(foundCustomers);
-//     } catch (err) {
-//       res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
-//       res.status(500).json(err);
-//     }
-//   });
+      res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+      res.status(200).json(product);
+    } catch (err) {
+      res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+      res.status(500).json(err);
+    }
+  });
   
+  // Get a customer by ID
+  router.get('/customers/:id', async (req, res) => {
+    try {
+      const customerId = req.params.id;
   
+      // Find the customer by ID
+      const customer = await Customer.findByPk(customerId);
   
-
+      if (!customer) {
+        res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+        return res.status(404).json({ message: 'Customer not found' });
+      }
   
-  
-  
-//   // Get customer data along with associated deliveries
-// router.get('/customerorders', async (req, res) => {
-//     try {
-//       // Search through the queries and find those which match a column name from the customer model
-//       const columnNames = Object.keys(Customer.rawAttributes);
-//       let whereObject = {};
-//       for (let i = 0; i < Object.keys(req.query).length; i++) {
-//         if (columnNames.includes(Object.keys(req.query)[i])) {
-//           whereObject[Object.keys(req.query)[i]] = req.query[Object.keys(req.query)[i]]; // Fix this line
-//         }
-//       }
-  
-//       // Include the 'deliveries' association to fetch delivery data for each customer
-//       const foundCustomers = await Customer.findAll({
-//         where: whereObject,
-//         attributes: ['customer_first_name', 'customer_last_name'],
-//         include: [
-//           {
-//             model: Delivery,
-//             as: 'deliveries',
-//             attributes: ['delivery_id'],
-//             include: [
-//                 { 
-//                     model: Delivery_Detail, 
-//                     as: 'delivery_details', 
-//                     attributes: ['quantity']
-//                 }],
-//           },
-//         ],
-//       });
-  
-//       res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
-//       res.status(200).json(foundCustomers);
-//     } catch (err) {
-//       res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
-//       res.status(500).json(err);
-//     }
-//   });
-
-
-
-// Get customer data along with the sum of quantities for each customer
-// router.get('/customerorders', async (req, res) => {
-//     try {
-//       // Search through the queries and find those which match a column name from the customer model
-//       const columnNames = Object.keys(Customer.rawAttributes);
-//       let whereObject = {};
-//       for (let i = 0; i < Object.keys(req.query).length; i++) {
-//         if (columnNames.includes(Object.keys(req.query)[i])) {
-//           whereObject[Object.keys(req.query)[i]] = req.query[Object.keys(req.query)[i]]; // Fix this line
-//         }
-//       }
-  
-//       // Include the 'deliveries' association to fetch delivery data for each customer
-//       const foundCustomers = await Customer.findAll({
-//         where: whereObject,
-//         attributes: ['customer_first_name', 'customer_last_name'],
-//         include: [
-//           {
-//             model: Delivery,
-//             as: 'deliveries',
-//             attributes: [],
-//             include: [
-//               {
-//                 model: Delivery_Detail,
-//                 as: 'delivery_details',
-//                 attributes: [
-//                   [sequelize.fn('SUM', sequelize.col('quantity')), 'total_quantity'],
-//                 ],
-//               },
-//             ],
-//           },
-//         ],
-        
-//       });
-  
-//       res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
-//       res.status(200).json(foundCustomers);
-//     } catch (err) {
-//       res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
-//       res.status(500).json(err);
-//     }
-//   });
-  
-  
-  
-  
-
-  
+      res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+      res.status(200).json(customer);
+    } catch (err) {
+      res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+      res.status(500).json(err);
+    }
+  });
   
 module.exports = router;
