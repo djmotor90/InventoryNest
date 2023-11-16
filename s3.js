@@ -38,6 +38,5 @@ function uploadFile(file) {
         console.error(err);
         return null;
     }
-
   }
   exports.getFileStream = getFileStream

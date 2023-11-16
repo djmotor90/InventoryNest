@@ -132,6 +132,39 @@ customers.get('/new', async (req, res) => {
     res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
     res.status(200).json(formInfo);
 });
+//GETS all information needed for showing all tables
+customers.get('/sales', async (req,res) => {
+    const foundSales = await Delivery.findAll({
+        attributes:['delivery_date'],
+        include: [
+            {model: Delivery_Detail, as: "delivery_details",attributes: ['quantity', 'total_price'],
+                include:[{model: Product, as: "product", attributes: ['product_name']},
+                         {model: Warehouse, as: "warehouse", attributes: ['warehouse_name', 'warehouse_state']},
+            ]},
+            {model: Customer, as: 'customer', attributes: ['customer_first_name', 'customer_last_name']}
+        ]
+    });
+    const tableData = [];
+    foundSales.forEach(delivery =>{
+        let entryObj = {};
+        entryObj.delivery_date = delivery.dataValues.delivery_date.toString().substring(0, 10);
+        entryObj.customer = `${delivery.dataValues.customer.customer_first_name} ${delivery.dataValues.customer.customer_last_name}`;
+        let ammountSpent = 0;
+        let allProducts = [];
+        delivery.dataValues.delivery_details.forEach(delivery_detail => {
+            ammountSpent += delivery_detail.dataValues.total_price;
+            let individualPrice = (delivery_detail.dataValues.total_price/delivery_detail.dataValues.quantity).toFixed(2);
+            allProducts.push(`${delivery_detail.dataValues.product.dataValues.product_name} (${delivery_detail.dataValues.quantity} at $${individualPrice} a piece) from ${delivery_detail.dataValues.warehouse.dataValues.warehouse_name}`);
+        });
+        entryObj.different_product_types = delivery.dataValues.delivery_details.length;
+        entryObj.total_spent  = `$ ${ammountSpent}`;
+        //make this as a list in the frontend
+        entryObj.delivery_information  = allProducts;
+        tableData.push(entryObj);
+    });
+    res.set('Access-Control-Allow-Origin', 'http://localhost:3000'); 
+    res.status(200).json(tableData);
+});
 //GETS the information and analytics on one customer. Also will send over the needed data for a purchase form
 customers.get('/:id', async (req,res) => {
     try {
