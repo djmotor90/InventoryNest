@@ -1,4 +1,6 @@
 //This holds the commands to migrate and seed your database
+
+
 npx sequelize db:migrate
 npx sequelize db:seed:all
 
