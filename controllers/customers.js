@@ -132,6 +132,18 @@ customers.get('/new', async (req, res) => {
     res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
     res.status(200).json(formInfo);
 });
+customers.get('/sales', async (req,res) => {
+    const foundSales = await Delivery.findAll({
+        attributes: {exclude: ['createdAt', 'updatedAt']}
+    });
+    foundSales.forEach(delivery =>{
+        delivery.dataValues.delivery_date = delivery.dataValues.delivery_date.toString().substring(0, 10) 
+    })
+     
+    res.set('Access-Control-Allow-Origin', 'http://localhost:3000'); 
+    res.status(200).json(foundSales);
+});
+
 //GETS the information and analytics on one customer. Also will send over the needed data for a purchase form
 customers.get('/:id', async (req,res) => {
     try {
@@ -225,5 +237,11 @@ customers.get('/:id', async (req,res) => {
         res.status(500).json(err)
     }
 });
+
+
+
+
+
+
 
 module.exports = customers;
