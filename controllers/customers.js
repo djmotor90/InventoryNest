@@ -2,9 +2,14 @@
 const customers    = require('express').Router();
 const { response }  = require('express');
 const db            = require('../models');
-const { Customer, Delivery, Delivery_Detail, Product, Warehouse } = db;
+const { Customer, Delivery, Delivery_Detail, Product, Warehouse, Inventory } = db;
 const { Op }        = require('sequelize');
 const delivery_detail = require('../models/delivery_detail');
+
+//WE ARE USING FOREACH ASYNCHRONOUSLY WHEN WE BUY PRODUCTS, SO I MADE AN ASYNC FOREACH
+Array.prototype.forEachAsync = async function (fn) {
+    for (let t of this) { await fn(t) }
+}
 
 
 //Home page simly needs to show all entries in a table
@@ -39,7 +44,7 @@ customers.get('/', async (req,res) => {
     };
 });
 //POSTS the new customer creation
-//Note: i have not implemented aws file uploading yet, so just remove the filename from the req.body eventually
+//Note: i have not implemented aws file uploading yet, so just remove the filename from the req.body atm
 customers.post('/', async (req, res) => {
     try {
         //TODO back end data validation
@@ -132,7 +137,7 @@ customers.get('/new', async (req, res) => {
     res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
     res.status(200).json(formInfo);
 });
-//GETS all information needed for showing all tables
+//GETS all information needed for showing a table of deliveries by customers
 customers.get('/sales', async (req,res) => {
     const foundSales = await Delivery.findAll({
         attributes:['delivery_date'],
@@ -245,11 +250,27 @@ customers.get('/:id', async (req,res) => {
             entry.delivery_information  = allProducts;
             purchasesTableInfo.push(entry);
         });
-        const sentData = {
-            showFormInfo   : showFormInfo,
-            associateTable : purchasesTableInfo,
-        };
 
+        //INFORMATION NEEDED FOR SALES TABLE: need all products present anywhere adn the sale price and amount present
+        //set up as so: {product_id : [product_name, amount]} 
+        const foundInventories = await Inventory.findAll({
+            attributes: ['current_stock_level'],
+            include: {model: Product, as:'product', attributes:['product_id', 'product_name'] }
+        });
+        purchaseFormData = {};
+        foundInventories.forEach(inventory => {
+            let product_id = inventory.dataValues.product.dataValues.product_id
+            if (Object.keys(purchaseFormData).includes(product_id)){
+                purchaseFormData[product_id][1] +=  inventory.dataValues.current_stock_level;
+            }else{   
+                purchaseFormData[product_id] = [inventory.dataValues.product.dataValues.product_name, inventory.dataValues.current_stock_level]
+            }
+        });
+        const sentData = {
+            showFormInfo     : showFormInfo,
+            associateTable   : purchasesTableInfo,
+            purchaseFormData : purchaseFormData
+        };
         res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
         res.status(200).json(sentData);
     } catch (err) {
@@ -258,5 +279,113 @@ customers.get('/:id', async (req,res) => {
         res.status(500).json(err)
     }
 });
+//This handles updating any individual customer
+customers.put('/:id', async(req,res) => {
+    //here you should do backend validation 
+    //NOTE: right now we have nothing even trying to handle picture insertions, we are just straight putting in the filename
+    const customerToUpdate = await Customer.findOne({
+        where:{
+            customer_id:req.params.id
+        }
+    });
+    await warehouseToUpdate.update(req.body);
+    await warehouseToUpdate.save()
+    res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+    res.status(201).json({message:'Your Edit Was Successful', id: req.params.id});
+});
+//this handles making a delivery by 
+customers.post('/:id', async (req,res) => {
+    try {
+        //TODO back end validation
+        let customer_id = parseInt(req.params.id);
+        let date = new Date();
+        //First make your main delivery ticket
+        const deliveryTicket = await Delivery.create({customer_id: customer_id, delivery_date : date});
+        //keep track of this resulting id for delivery details
+        const delivery_id = deliveryTicket.dataValues.delivery_id;
+        //first loop through the length of the body
+        // NOTE THE ARRAY METHOD FOREACH DOES NOT WORK WITH ASYNC. THIS HOWEVER DOES
+        await req.body.forEachAsync(async (product_type,i) => {
+            //start tracking our delivery detail info
+            let delivery_detailsObj = {
+                product_id : parseInt(product_type.product_id),
+                //this warehouse part needs to be modified in the future
+                warehouse_id : 0,
+                quantity : parseInt(product_type.amount),
+                total_price: 0,
+                delivery_id : delivery_id
+            }
+            //first lets go into the products table and get the total price
+            const foundProduct = await Product.findOne({
+                where: {product_id : parseInt(product_type.product_id)},
+                attributes: ['product_sale_price']
+            });
+            delivery_detailsObj.total_price = (foundProduct.dataValues.product_sale_price * parseInt(product_type.amount));
+            //first remove it from the inventory. Note: this could come from multiple warehouses if the purchase is too big
+            const foundInventories = await Inventory.findAll({
+                where: {product_id : product_type.product_id},
+                //sort to have the largest one come first 
+                order: [['current_stock_level', 'DESC']]
+            });
+            let purchaseAmount = parseInt(product_type.amount);
+            //RIGHT NOW ITS FIRST TAKING INVENTORY FROM THE INVENTORY WITH THE MOST. change to warehouse nearest to customer
+            let inventoryIndex = 0;
+            //when its a foreachasync cant pass through index
+            await foundInventories.forEachAsync(async (inventory) => {
+                //TODO this needs to change to an array of warehouse_ids
+                if (inventoryIndex === 0){delivery_detailsObj.warehouse_id = inventory.dataValues.warehouse_id};
+                inventoryIndex++;
+                //subtract from purchase amount
+                let inventoryStock = inventory.dataValues.current_stock_level;
+                //TODO for now the delivery detail only includes the first warehouse it takes from. need to change this
+                //either make a delivery details warehouse id an array or make multiple delivery details for one product. rn this could break
+                // other things if i do it that way so i wont
+                if (purchaseAmount === 0)
+                {
+                    //do nothing NOTE: can you break or continue here?
+                }
+                else if (purchaseAmount >= inventoryStock ){
+                    //if this is the case, delete the inventory stock and move on
+                    const deletedInventory = await Inventory.destroy({
+                        where: {inventory_id : inventory.dataValues.inventory_id}
+                    });
+                    //now make the purchase amount show its been subtracted
+                    purchaseAmount = (purchaseAmount - inventoryStock);
+                }else{
+                    //update inventory to remove the remainder
+                    const inventoryToUpdate = await Inventory.findOne({
+                        where:{
+                            inventory_id:inventory.dataValues.inventory_id
+                        }
+                    });
+                    let updatedStock = inventory.dataValues.current_stock_level - purchaseAmount;
+                    inventoryToUpdate.current_stock_level = updatedStock;
+                    await inventoryToUpdate.save();
+                    console.log(inventoryToUpdate)
+                }
+            });
+            //now we can add our delivery detail. NOTE: in the future you are either going to have to make multiple deliv_deets for
+            // each warehouse, or make warehouse id an array
+            console.log(delivery_detailsObj.warehouse_id);
+            const newDelivery_Detail = await Delivery_Detail.create({
+                product_id : delivery_detailsObj.product_id,
+                //this warehouse part needs to be modified in the future
+                warehouse_id : delivery_detailsObj.warehouse_id,
+                quantity : delivery_detailsObj.quantity,
+                total_price: delivery_detailsObj.total_price,
+                delivery_id : delivery_detailsObj.delivery_id
+            });
+            console.log(newDelivery_Detail);
+        });
+        res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+        res.status(201).json({message:'Your Customer Purchase Simulation Was Successful'});
+    } catch (err) {
+        console.log(err)
+        res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+        res.status(500).json(err)
+    }
+});
+
+
 
 module.exports = customers;

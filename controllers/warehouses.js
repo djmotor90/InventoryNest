@@ -269,10 +269,19 @@ warehouses.get('/:id/edit', async (req,res) => {
         res.status(500).json(err)
     }
 });
-//Edit individual entry post route: takes in the information from the edit form and updates the databse
+//This handles updating any individual warehouse
 warehouses.put('/:id', async(req,res) => {
-    //update the entry 
     //here you should do backend validation 
+    //NOTE: right now we have nothing even trying to handle picture insertions, we are just straight putting in the filename
+    const warehouseToUpdate = await Warehouse.findOne({
+        where:{
+            warehouse_id:req.params.id
+        }
+    });
+    await warehouseToUpdate.update(req.body);
+    await warehouseToUpdate.save()
+    res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+    res.status(201).json({message:'Your Edit Was Successful', id: req.params.id});
 });
 warehouses.post('/:id', async(req,res) => {
 

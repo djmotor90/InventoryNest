@@ -20,7 +20,7 @@ module.exports = (sequelize, DataTypes) => {
           foreignKey:'product_id',
           as:"product"
       }),
-      //each inventory has multiple inventories
+      //each delivery has a warehouse
       Delivery_Detail.belongsTo(Warehouse, {
         foreignKey:'warehouse_id',
         as:"warehouse"
@@ -31,10 +31,10 @@ module.exports = (sequelize, DataTypes) => {
     delivery_detail_id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
     delivery_id: DataTypes.INTEGER,
     product_id: DataTypes.INTEGER,
-    //TODO this is going to be a problem later down the road since inventories can be deleted for keeping track of delivieries, rpobably need to switch to warehouses
     warehouse_id: DataTypes.INTEGER,
+    //NOTE: this is never used. My model refused to update and was convinced this was still here even though it isnt
+    inventory_id: DataTypes.INTEGER,
     quantity: DataTypes.INTEGER,
-    //this is going to catch the price at the time in case it ever changeds
     total_price: DataTypes.FLOAT
   }, {
     sequelize,

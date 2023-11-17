@@ -3,10 +3,8 @@ const products     = require('express').Router();
 const { response } = require('express');
 const db           = require('../models');
 const { Op }       = require('sequelize');
-const { Product, Inventory, Warehouse, Owner, Transfer, Delivery_Detail, Owner_Purchase } = db;
-
-
-
+const delivery_detail = require('../models/delivery_detail');
+const { Product, Inventory, Warehouse, Owner, Transfer, Delivery_Detail, Owner_Purchase, Delivery, Customer } = db;
 
 //STATIC ROUTES
 //Home route: simply needs to send over all table data to populate a table
@@ -220,35 +218,113 @@ products.get('/:id', async (req,res) => {
             allWarehouses : allWarehouses,
             ownerMoney : ownerMoney,
         };
-        const sentData = {
-            showFormInfo   : showFormInfo,
-            associateTable : wareHouseTableInfo,
-            purchaseForm   : purchaseTransferForm
-        };
+        //NOW create the analytics object
+        const showAnalyticsInfo = {list: {
+            sale_return: `$${parseFloat(foundProduct.dataValues.product_sale_price - foundProduct.dataValues.product_provider_price).toFixed(2)}`,
+            total_stock:0,
+            warehouse_with_the_most: '',
+            total_sold:0,
+            customer_most_often_buying:'',
+            //region_most_often_buying:'' DO THIS EVENTUALLY,
+        }};
 
-        /////Rhionna we are starting here to make the product performance analytics 
-        //things we need: the total quantity of products across all inventories
-        //                the total number of sales this product has had 
-        //                the return from stock price versus sell price
-        //                the location in which it is most successfull
-        //                a graph that shows over the post 30 days when it has been purchased
-        analyticsObject = {
-            quantity:0,
-            quantitySold: 0,
-
-        };
+        //find the total number of products across all inventories
+        //TODO this doesnt handle ties
+        let highestStock = 0;
+        let warehouseWithMost = "";
         foundProduct.dataValues.inventories.forEach((inventory) => {
-            //this is may mapping function
-            analyticsObject.quantity =  analyticsObject.quantity + inventory.dataValues.current_stock_level;
-        })//accepts a callback)
-        const foundDeliveries = await Delivery_Detail.findAll({
+            showAnalyticsInfo.list.total_stock += inventory.dataValues.current_stock_level;
+            if (inventory.dataValues.current_stock_level > highestStock ){
+                highestStock = inventory.dataValues.current_stock_level;
+                warehouseWithMost = `${inventory.dataValues.warehouse.warehouse_name} (${inventory.dataValues.warehouse.warehouse_state})`;
+            }
+        });
+        showAnalyticsInfo.list.warehouse_with_the_most = warehouseWithMost;
+        //find the customer most often purchasing this item, and the atotal amoutn of times purchased
+        const foundDelivery_Details = await Delivery_Detail.findAll({
             where: {product_id: req.params.id},
             attributes: ['quantity'],
+            include:{model: Delivery, as: 'delivery',
+                    order: ['customer_id', 'ASC'], 
+                    include: {model: Customer, as: 'customer', attributes:['customer_id']}}
         });
-        foundDeliveries.forEach((delivery) => {
-            //this is may mapping function
-            analyticsObject.quantitySold =  analyticsObject.quantitySold + delivery.dataValues.quantity;
-        })
+        //stores every customers id and the quantity they have bought
+        let customerObj = {};
+        foundDelivery_Details.forEach((delivery_detail) => {
+            //add to the quantity sold 
+            showAnalyticsInfo.list.total_sold +=  delivery_detail.dataValues.quantity;
+            //check if the customer id already exists in the customerObj
+            if( customerObj[delivery_detail.dataValues.delivery.dataValues.customer.dataValues.customer_id]){
+                customerObj[delivery_detail.dataValues.delivery.dataValues.customer.dataValues.customer_id] += delivery_detail.dataValues.quantity
+            }else{
+                customerObj[delivery_detail.dataValues.delivery.dataValues.customer.dataValues.customer_id] = delivery_detail.dataValues.quantity
+            }
+        });
+        //find the customer with the most purchases
+        let maxValue = 0;
+        let currentMaxCustomer_id = 0;
+        Object.keys(customerObj).map(customer => {
+            if(customerObj[customer] > maxValue)
+            {
+                maxValue = customerObj[customer];
+                currentMaxCustomer_id = customer
+            }
+        });
+        //lets go get the customer name and write out fully our sent data
+        const foundBestCustomer = await Customer.findOne({where: {customer_id: currentMaxCustomer_id}, attributes:['customer_first_name', 'customer_last_name']});
+        //HANDLING IF NOBODY HAS BOUGHT IT 
+        if (foundBestCustomer){
+            showAnalyticsInfo.list.customer_most_often_buying = `${foundBestCustomer.dataValues.customer_first_name} ${foundBestCustomer.dataValues.customer_last_name} has purchased this ${maxValue} times.`
+        }else{
+            showAnalyticsInfo.list.customer_most_often_buying = 'Nobody has bought this product yet.'
+        }
+
+        //Now lets get the data for a bar graph
+        //Now query the delivery details for sales that occured withing the last 10 days
+        let tendaysAgoDate = new Date(new Date().setHours(0,0,0,0) - ((24*60*60*1000) * 10)); 
+        const allSalesPastTenDays = await Delivery.findAll({
+            attributes: ['delivery_date'],
+            include:[
+                { model: Delivery_Detail, as: "delivery_details", 
+                    attributes: ['quantity'],
+                    include: { model: Product, as:'product', attributes:['product_id'] }
+                }
+            ],
+            where: {
+                delivery_date: {
+                    [Op.gte]: [tendaysAgoDate.toISOString()]
+                }
+            }
+        });
+        let barObj = {}
+        for (let i=0; i< 10; i++)
+        {
+            let date =  new Date(new Date().setHours(0,0,0,0) - ((24*60*60*1000)*i)).toString().substring(0, 10)
+            barObj[date] = 0
+        } 
+         //now we need to get only the ones with this specific product
+        allSalesPastTenDays.forEach(delivery => {
+            //get the date of this delivery
+            let wmd = delivery.dataValues.delivery_date.toString().substring(0, 10);
+            //look at all the delivery details
+            let quantityBought = 0;
+            delivery.dataValues.delivery_details.forEach( delivery_detail => {
+                //check if this is for your product
+                if (delivery_detail.dataValues.product.product_id == req.params.id)
+                {
+                    quantityBought += delivery_detail.dataValues.quantity;
+                }
+            });
+            //now add quantity to your bar graph obj
+            barObj[wmd] += quantityBought;
+        });
+        showAnalyticsInfo.barData = barObj;
+        const sentData = {
+            showFormInfo     : showFormInfo,
+            associateTable   : wareHouseTableInfo,
+            purchaseForm     : purchaseTransferForm,
+            showAnalyticsInfo: showAnalyticsInfo
+        };
         res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
         res.status(200).json(sentData);
     } catch (err) {
@@ -450,7 +526,6 @@ products.get('/:id/edit', async (req,res) => {
         res.status(500).json(err)
     }
 });
-
 products.delete('/:id', async(req,res) => {
     try {
         //TODO: it may be better in the future to not delete it, but maybe move it to a history database so, if you please, you can still do analytics on it
