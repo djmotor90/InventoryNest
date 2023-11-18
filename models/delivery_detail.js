@@ -9,7 +9,7 @@ module.exports = (sequelize, DataTypes) => {
      * This method is not a part of Sequelize lifecycle.
      * The `models/index` file will call this method automatically.
      */
-    static associate({ Delivery, Product, Inventory }) {
+    static associate({ Delivery, Product, Warehouse }) {
       // each Delivery has multiple delivery details
       Delivery_Detail.belongsTo(Delivery, {
           foreignKey:'delivery_id',
@@ -20,10 +20,10 @@ module.exports = (sequelize, DataTypes) => {
           foreignKey:'product_id',
           as:"product"
       }),
-      //each inventory has multiple inventories
-      Delivery_Detail.belongsTo(Inventory, {
-        foreignKey:'inventory_id',
-        as:"inventory"
+      //each delivery has a warehouse
+      Delivery_Detail.belongsTo(Warehouse, {
+        foreignKey:'warehouse_id',
+        as:"warehouse"
       })
     }
   }
@@ -31,6 +31,8 @@ module.exports = (sequelize, DataTypes) => {
     delivery_detail_id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
     delivery_id: DataTypes.INTEGER,
     product_id: DataTypes.INTEGER,
+    warehouse_id: DataTypes.INTEGER,
+    //NOTE: this is never used. My model refused to update and was convinced this was still here even though it isnt
     inventory_id: DataTypes.INTEGER,
     quantity: DataTypes.INTEGER,
     total_price: DataTypes.FLOAT

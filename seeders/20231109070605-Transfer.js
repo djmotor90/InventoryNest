@@ -8,6 +8,7 @@ module.exports = {
         original_warehouse_id: 1,
         new_warehouse_id: 2,
         product_id: 1,
+        transfer_amount: 500,
         transfer_date: new Date(),
         createdAt: new Date(),
         updatedAt: new Date()
@@ -16,6 +17,7 @@ module.exports = {
         original_warehouse_id: 1,
         new_warehouse_id: 2,
         product_id: 1,
+        transfer_amount: 50,
         transfer_date: new Date(),
         createdAt: new Date(),
         updatedAt: new Date()
@@ -24,6 +26,7 @@ module.exports = {
         original_warehouse_id: 1,
         new_warehouse_id: 2,
         product_id: 2,
+        transfer_amount:50,
         transfer_date: new Date(),
         createdAt: new Date(),
         updatedAt: new Date()
@@ -32,6 +35,7 @@ module.exports = {
         original_warehouse_id: 2,
         new_warehouse_id: 1,
         product_id: 2,
+        transfer_amount: 30,
         transfer_date: new Date(),
         createdAt: new Date(),
         updatedAt: new Date()
@@ -40,11 +44,11 @@ module.exports = {
         original_warehouse_id: 1,
         new_warehouse_id: 2,
         product_id: 3,
+        transfer_amount: 10,
         transfer_date: new Date(),
         createdAt: new Date(),
         updatedAt: new Date()
-      },
-
+      }
     ]);
   },
 

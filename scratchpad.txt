@@ -1,0 +1,9 @@
+//This holds the commands to migrate and seed your database
+
+
+npx sequelize db:migrate
+npx sequelize db:seed:all
+
+
+
+npx sequelize model:generate --name Owner_Purchase --attributes "product_id:integer, warehouse_id:integer, quantity:integer, product_price_at_the_time:float" --force true

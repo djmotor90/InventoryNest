@@ -17,9 +17,13 @@ module.exports = {
         allowNull: false,
         type: Sequelize.INTEGER
       },
-      //TODO this may make more sense to be an warehouse id, havent decided yet
-      inventory_id:{
+      warehouse_id:{
         allowNull:false,
+        type: Sequelize.INTEGER
+      },
+      //THIS IS NEVER USED, my model and migration werent talking well without it and I have no idea why
+      inventory_id:{
+        allowNull:true,
         type: Sequelize.INTEGER
       },
       quantity: {

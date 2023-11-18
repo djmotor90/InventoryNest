@@ -7,7 +7,7 @@ module.exports = {
       {
         delivery_id: 1,
         product_id: 1,
-        inventory_id: 1,
+        warehouse_id: 1,
         quantity: 3,
         total_price: 5.50,
         createdAt: new Date(),
@@ -15,8 +15,8 @@ module.exports = {
       },
       {
         delivery_id: 1,
-        product_id: 1,
-        inventory_id: 1,
+        product_id: 2,
+        warehouse_id: 1,
         quantity: 5,
         total_price: 6.50,
         createdAt: new Date(),

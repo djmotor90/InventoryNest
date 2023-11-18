@@ -6,6 +6,7 @@ module.exports = {
     await queryInterface.bulkInsert('Warehouses', [
       {
         warehouse_name: "University of Chicago Warehouse",
+        warehouse_description: 'A Warehouse specializing in academic products and technology.',
         warehouse_address: "5801 S Ellis Ave",
         warehouse_city: "Chicago",
         warehouse_state: "IL",
@@ -16,6 +17,7 @@ module.exports = {
       },
       {
         warehouse_name: "Stanford Warehouse",
+        warehouse_description: 'A Warehouse specializing in academic products and technology.',
         warehouse_address: "450 Jane Stanford Way",
         warehouse_city: "Stanford",
         warehouse_state: "CA",
@@ -26,6 +28,7 @@ module.exports = {
       },
       {
         warehouse_name: "White House Warehouse",
+        warehouse_description: 'A Warehouse specializing in government needs and clothing.',
         warehouse_address: "1600 Pennsylvania Avenue NW",
         warehouse_city: "Washington",
         warehouse_state: "DC",

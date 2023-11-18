@@ -17,9 +17,6 @@ module.exports = {
         allowNull: false,
         type: Sequelize.STRING
       },
-      customer_purchase_count: {
-        type: Sequelize.INTEGER
-      },
       customer_address: {
         allowNull: false,
         type: Sequelize.STRING
@@ -90,6 +87,10 @@ module.exports = {
       },
       customer_picture_filename: {
         type: Sequelize.STRING
+      },
+      isSoftDeleted: {
+        allowNull: true,
+        type: Sequelize.BOOLEAN
       },
       createdAt: {
         allowNull: false,

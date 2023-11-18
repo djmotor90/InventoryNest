@@ -13,6 +13,10 @@ module.exports = {
         allowNull: false,
         type: Sequelize.STRING
       },
+      warehouse_description: {
+        allowNull: false,
+        type: Sequelize.TEXT
+      },
       warehouse_address: {
         allowNull: false,
         type: Sequelize.STRING
@@ -83,6 +87,10 @@ module.exports = {
       },
       warehouse_capacity: {
         type: Sequelize.FLOAT
+      },
+      isSoftDeleted: {
+        allowNull: true,
+        type: Sequelize.BOOLEAN
       },
       createdAt: {
         allowNull: false,

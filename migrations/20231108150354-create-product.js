@@ -38,6 +38,10 @@ module.exports = {
         allowNull: true,
         type: Sequelize.STRING
       },
+      isSoftDeleted: {
+        allowNull: true,
+        type: Sequelize.BOOLEAN
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE

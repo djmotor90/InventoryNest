@@ -2,32 +2,28 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('Transfers', {
-      transfer_id: {
+    await queryInterface.createTable('Owner_Purchases', {
+      owner_purchase_id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
-        type: Sequelize.INTEGER
-      },
-      original_warehouse_id: {
-        allowNull: false,
-        type: Sequelize.INTEGER
-      },
-      new_warehouse_id: {
-        allowNull: false,
         type: Sequelize.INTEGER
       },
       product_id: {
         allowNull: false,
         type: Sequelize.INTEGER
       },
-      transfer_date: {
-        allowNull: false,
-        type: Sequelize.DATE
-      },
-      transfer_amount: {
+      warehouse_id: {
         allowNull: false,
         type: Sequelize.INTEGER
+      },
+      quantity: {
+        allowNull: false,
+        type: Sequelize.INTEGER
+      },
+      product_price_at_the_time: {
+        allowNull: false,
+        type: Sequelize.FLOAT
       },
       createdAt: {
         allowNull: false,
@@ -40,6 +36,6 @@ module.exports = {
     });
   },
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('Transfers');
+    await queryInterface.dropTable('Owner_Purchases');
   }
 };
