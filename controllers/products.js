@@ -426,6 +426,8 @@ products.post('/:id', async (req,res) => {
                         product_id          : req.body.productId,
                         warehouse_id        : req.body.warehouseTo
                     });
+                    await fromInventory.decrement('current_stock_level',{ by: req.body.amount});
+                    await fromInventory.save();
                 }else{
                     // you need to increment your to inventory
                     await toInventory.increment('current_stock_level',{ by: req.body.amount});
