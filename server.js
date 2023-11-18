@@ -15,7 +15,9 @@ const port          = 3001;
 require('dotenv').config();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use(cors());
+app.use(cors({
+    origin: 'http://132.145.219.172' // Replace with your frontend's origin
+  }));
 //AWS BUCKET CONNECTION //
 const { uploadFile, getFileStream } = require('./s3')
 
