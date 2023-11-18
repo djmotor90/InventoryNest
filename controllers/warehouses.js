@@ -1,7 +1,7 @@
 //DEPENDENCIES
 const warehouses                         = require('express').Router();
 const db                                 = require('../models');
-const { Warehouse, Inventory, Product, Customer }  = db;
+const { Warehouse, Inventory, Product, Customer, Delivery_Details }  = db;
 const { Op }                             = require('sequelize');
 //for converting an address to latlong
 const { calcCrowDistance }               = require('../locationFunctions.js');
@@ -170,13 +170,15 @@ warehouses.get('/:id', async (req,res) => {
                 total_items_stored         : 0,
                 most_common_item_type      : '',
                 total_deliveries           : 0,
-                nearest_5_customers        : ''
             },
             barData               : {}
         };
         //lets first compare coords and find the nearest 5 customers
         const allCustomers = await Customer.findAll({});
         let warehouseCoords = [geolocatedObj[0].latitude, geolocatedObj[0].longitude];
+        //first make an array of addresses
+        //40 customers
+        //write a page load
         let allCustomerCoords = [];
         for (let i=0; i< allCustomers.length; i++){
             let customerName = `${allCustomers[i].dataValues.customer_first_name} ${allCustomers[i].dataValues.customer_last_name}`;
@@ -204,6 +206,7 @@ warehouses.get('/:id', async (req,res) => {
         });
         //lets find the largest category bought
         //NOTE this doesnt handle ties yet
+        //NOTE: this takes too long, taking out for now
         /*mostStoredAmount = 0
         mostStoredCategory = '';
         for (let i=0; i<Object.keys(categoriesStored).length; i++){
@@ -213,13 +216,12 @@ warehouses.get('/:id', async (req,res) => {
             }
         };
         showAnalyticsInfo.list.most_common_item_type = mostStoredCategory;
+        */
         //Now lets get the number of delivieries filfilled from this warehouse
         //const allDeliveryDeets 
+        //const allDeliveryDetails = await Delivery_Details.findAll({where: {warehouse_id : req.params.id}})
         
-
         /*
-        
-
         //Now lets get the quantity of items bought the past 10 days for the bar graph
         let tendaysAgoDate = new Date(new Date().setHours(0,0,0,0) - ((24*60*60*1000) * 10)); 
         const allPurchasesPast10Days = await Delivery.findAll({
