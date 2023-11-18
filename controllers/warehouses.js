@@ -1,10 +1,10 @@
 //DEPENDENCIES
 const warehouses                         = require('express').Router();
-const { response }                       = require('express');
 const db                                 = require('../models');
-const { Warehouse, Inventory, Product }  = db;
+const { Warehouse, Inventory, Product, Customer }  = db;
 const { Op }                             = require('sequelize');
 //for converting an address to latlong
+const { calcCrowDistance }               = require('../locationFunctions.js');
 const nodeGeocoder                       = require('node-geocoder');
     //initializing the geocoder using my google free tier key
 const geocoder = nodeGeocoder({provider: 'google',apiKey: process.env.ADDRESS_API_KEY, formatter: null});
@@ -163,47 +163,101 @@ warehouses.get('/:id', async (req,res) => {
             //add in the stock amount
             productTableInfo[i].current_stock_level =   foundWarehouse.inventories[i].dataValues.current_stock_level;
         };
-        //for both a purchase and transfer form we need every single warehouse
-        //why dont we give name (state)
-        //realistically we should get the capacity but i dont have time to do this check in the end 
-        //also include how much of that item the warehouse currently has 
-        /*const allWarehouses = await Warehouse.findAll({
-            attributes: ['warehouse_id', 'warehouse_name', 'warehouse_state'],
+        //REPORTING CARD INFORMATION
+        // Most common item type in a warehouse, customers in 100 mile radius, deliveries from this warehouse count, deliveries in past 10 days
+        let showAnalyticsInfo = {
+            list: {
+                total_items_stored         : 0,
+                most_common_item_type      : 0,
+                total_deliveries           : 0,
+                nearest_5_customers        : ''
+            },
+            barData               : {}
+        };
+        //lets first compare coords and find the nearest 5 customers
+        const allCustomers = await Customer.findAll({});
+        let warehouseCoords = [geolocatedObj[0].latitude, geolocatedObj[0].longitude];
+        let allCustomerCoords = [];
+        for (let i=0; i< allCustomers.length; i++){
+            let customerName = `${allCustomers[i].dataValues.customer_first_name} ${allCustomers[i].dataValues.customer_last_name}`;
+            let geoLocatedCustomer = await geocoder.geocode(allCustomers[i].dataValues.customer_address);
+            let customerCoords = [geoLocatedCustomer[0].latitude, geoLocatedCustomer[0].longitude];
+            let distance = calcCrowDistance(warehouseCoords[0], warehouseCoords[1], customerCoords[0], customerCoords[1]);
+            allCustomerCoords.push({customerName: customerName, distance: distance});
+        };
+        //Now we have to sort all Customer Coords
+        let sortedDistanceArray = allCustomerCoords.sort(({distance:a}, {distance:b}) => a-b);
+        //and insert the top 5
+        showAnalyticsInfo.list.nearest_5_customers = sortedDistanceArray[0].customerName;
+        for (let i=1; i< 5; i++){
+            showAnalyticsInfo.list.nearest_5_customers = `${showAnalyticsInfo.list.nearest_5_customers}, ${sortedDistanceArray[i].customerName}` 
+        };
+        //Next lets look through the inventory and find the most common item type and the total number of items stored here
+        
+        /*
+        //Next lets look at their deliveries to find how much they have spent and the quantity purchased
+        let categoriesBought = {};
+        foundCustomer.dataValues.deliveries.forEach(delivery => {
+                delivery.dataValues.delivery_details.forEach(delivery_detail => {
+                        showAnalyticsInfo.list.total_purchases += delivery_detail.dataValues.quantity;
+                        showAnalyticsInfo.list.total_spent += delivery_detail.dataValues.total_price;
+                        if(categoriesBought[delivery_detail.dataValues.product.dataValues.product_category]){
+                            categoriesBought[delivery_detail.dataValues.product.dataValues.product_category] += delivery_detail.dataValues.quantity;
+                        }else{
+                            categoriesBought[delivery_detail.dataValues.product.dataValues.product_category] = delivery_detail.dataValues.quantity;
+                        }   
+                });
         });
-        //lets put this together such that we have 1:warehouse_id, 'warehouse_name,'warehouse_state','current_stock_level' = 0 if none
-        //NOTE this says when i do typeof its an object but i can do array methods, what is this?
-        //lets get from above all warehouses with product in it, lets get their id
-        let warehousesWithProductIds = {};
-        wareHouseTableInfo.forEach(warehouse => {
-            warehousesWithProductIds[warehouse.warehouse_id] = warehouse.current_stock_level
-        });
-        Object.keys(allWarehouses).forEach((warehouseKey) => {
-            //check if the warehouse id is in the withproduct obj we made above, if so throw it the currentstockval
-            if (Object.keys(warehousesWithProductIds).includes(  allWarehouses[warehouseKey].warehouse_id.toString())){
-                //theres got to be a better way but im looping through and dynamically assinging the formatted one. I tried just directly adding 
-                // to the all warehouses but wasnt working
-                
-                allWarehouses[warehouseKey].dataValues.current_stock_level = warehousesWithProductIds[allWarehouses[warehouseKey].warehouse_id];
+        //quickly parse the money to two decimals
+        showAnalyticsInfo.list.total_spent = `$${showAnalyticsInfo.list.total_spent.toFixed(2)}`;
+        //lets find the largest category bought
+        //NOTE this doesnt handle ties yet
+        mostBoughtAmount = 0
+        mostBoughtCategory = '';
+        for (let i=0; i<Object.keys(categoriesBought).length; i++){
+            if(categoriesBought[Object.keys(categoriesBought)[i]] > mostBoughtAmount){
+                mostBoughtAmount = categoriesBought[i];
+                mostBoughtCategory = Object.keys(categoriesBought)[i];
             }
-            else{
-                allWarehouses[warehouseKey].dataValues.current_stock_level = 0;
+        };
+        showAnalyticsInfo.list.favorite_product_type = mostBoughtCategory;
+        //Now lets get the quantity of items bought the past 10 days for the bar graph
+        let tendaysAgoDate = new Date(new Date().setHours(0,0,0,0) - ((24*60*60*1000) * 10)); 
+        const allPurchasesPast10Days = await Delivery.findAll({
+            attributes: ['delivery_date', 'customer_id'],
+            include:{ model: Delivery_Detail, as: "delivery_details", attributes: ['quantity']},
+            where: {
+                delivery_date: {
+                    [Op.gte]: [tendaysAgoDate.toISOString()]
+                }
             }
         });
-        //For purchasing you also need to know how much money our main user has 
-        const ownerMoneyQuery = await Owner.findOne({
-            // we always use the first user
-            where: [{owner_id : 1}],
-            attributes:[ 'starting_money','total_expenditures', 'total_revenue']
+        let barObj = {}
+        for (let i=0; i< 10; i++)
+        {
+            let date =  new Date(new Date().setHours(0,0,0,0) - ((24*60*60*1000)*i)).toString().substring(0, 10)
+            barObj[date] = 0
+        } 
+         //now we need to get only the ones with this specific product
+         allPurchasesPast10Days.forEach(delivery => {
+            if (delivery.dataValues.customer_id === parseInt(req.params.id)){
+                    //get the date of this delivery
+                    let wmd = delivery.dataValues.delivery_date.toString().substring(0, 10);
+                    //look at all the delivery details
+                    let quantityBought = 0;
+                    delivery.dataValues.delivery_details.forEach( delivery_detail => {
+                        quantityBought += delivery_detail.dataValues.quantity;
+                    });
+                    //now add quantity to your bar graph obj
+                    barObj[wmd] += quantityBought;
+            };
         });
-        let ownerMoney = ownerMoneyQuery.starting_money - ownerMoneyQuery.total_expenditures + ownerMoneyQuery.total_revenue;
-        //what we need here: we need allwarehouses and ownermoney
-        const  purchaseTransferForm = {
-            allWarehouses : allWarehouses,
-            ownerMoney : ownerMoney,
-        };*/
+        showAnalyticsInfo.barData = barObj;
+        */
         const sentData = {
-            showFormInfo   : showFormInfo,
-            associateTable : productTableInfo
+            showFormInfo      : showFormInfo,
+            associateTable    : productTableInfo,
+            showAnalyticsInfo : showAnalyticsInfo
             //purchaseForm   : purchaseTransferForm
         };
         res.set('Access-Control-Allow-Origin', 'http://localhost:3000');

@@ -1,8 +1,7 @@
 //DEPENDENCIES
 const customers            = require('express').Router();
-const { response }         = require('express');
 const db                   = require('../models');
-const { Customer, Delivery, Delivery_Detail, Product, Warehouse, Inventory } = db;
+const { Customer, Delivery, Delivery_Detail, Product, Warehouse, Inventory, Owner } = db;
 const { Op }               = require('sequelize');
 //Personal Function dependencies for location work
 const { calcCrowDistance } = require('../locationFunctions.js');
@@ -268,7 +267,7 @@ customers.get('/:id', async (req,res) => {
                 purchaseFormData[product_id][1] +=  inventory.dataValues.current_stock_level;
             }else{   
                 //make a new inventory
-                purchaseFormData[product_id] = [inventory.dataValues.product.dataValues.product_name, inventory.dataValues.current_stock_level]
+                purchaseFormData[product_id] = [inventory.dataValues.product.dataValues.product_name, inventory.dataValues.current_stock_level];
             }
         });
 
@@ -400,6 +399,8 @@ customers.post('/:id', async (req,res) => {
         const deliveryTicket = await Delivery.create({customer_id: customer_id, delivery_date : date});
         //keep track of this resulting id for delivery details
         const delivery_id = deliveryTicket.dataValues.delivery_id;
+        //lastly make a revenue tracker that you will use to give to the owner
+        let revenueMade = 0;
         //first loop through the length of the body
         // NOTE THE ARRAY METHOD FOREACH DOES NOT WORK WITH ASYNC. THIS HOWEVER DOES
         await req.body.forEachAsync(async (product_type,i) => {
@@ -472,8 +473,13 @@ customers.post('/:id', async (req,res) => {
                 total_price: delivery_detailsObj.total_price,
                 delivery_id : delivery_detailsObj.delivery_id
             });
-            console.log(newDelivery_Detail);
+            revenueMade += newDelivery_Detail.total_price
         });
+        //Finally we add the revenue to the owner
+        const foundOwner = await Owner.findOne({where: {owner_id: 1}, attributes: ['owner_id','total_revenue']});
+        let newRevenue = foundOwner.dataValues.total_revenue + revenueMade;
+        foundOwner.total_revenue = newRevenue;
+        await foundOwner.save();
         res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
         res.status(201).json({message:'Your Customer Purchase Simulation Was Successful'});
     } catch (err) {
