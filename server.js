@@ -24,7 +24,7 @@ const { uploadFile, getFileStream } = require('./s3')
 //STATIC ROUTE FOR THE LANDING PAGE or general things
 //any time we fetch an image we use this route
 app.get('/images/:key', (req, res) => {
-    console.log(req.params)
+    //the key will be the name of the file in aws with its file shorcut
     const key = req.params.key
     const readStream = getFileStream(key)
     readStream.pipe(res)

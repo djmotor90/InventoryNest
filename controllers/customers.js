@@ -1,10 +1,17 @@
 //DEPENDENCIES
-const customers    = require('express').Router();
-const { response }  = require('express');
-const db            = require('../models');
-const { Customer, Delivery, Delivery_Detail, Product, Warehouse } = db;
-const { Op }        = require('sequelize');
-const delivery_detail = require('../models/delivery_detail');
+const customers            = require('express').Router();
+const db                   = require('../models');
+const { Customer, Delivery, Delivery_Detail, Product, Warehouse, Inventory, Owner } = db;
+const { Op }               = require('sequelize');
+//Personal Function dependencies for location work
+const { calcCrowDistance } = require('../locationFunctions.js');
+const nodeGeocoder         = require('node-geocoder');
+const warehouse = require('../models/warehouse.js');
+    //initializing the geocoder using my google free tier key
+const geocoder = nodeGeocoder({provider: 'google',apiKey: process.env.ADDRESS_API_KEY, formatter: null});
+//WE ARE USING FOREACH ASYNCHRONOUSLY WHEN WE BUY PRODUCTS, SO I MADE AN ASYNC FOREACH METHOD
+Array.prototype.forEachAsync = async function (fn) {for (let t of this) { await fn(t) }};
+
 
 
 //Home page simly needs to show all entries in a table
@@ -39,7 +46,7 @@ customers.get('/', async (req,res) => {
     };
 });
 //POSTS the new customer creation
-//Note: i have not implemented aws file uploading yet, so just remove the filename from the req.body eventually
+//Note: i have not implemented aws file uploading yet, so just remove the filename from the req.body atm
 customers.post('/', async (req, res) => {
     try {
         //TODO back end data validation
@@ -132,6 +139,7 @@ customers.get('/new', async (req, res) => {
     res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
     res.status(200).json(formInfo);
 });
+<<<<<<< HEAD
 customers.get('/sales', async (req,res) => {
     const foundSales = await Delivery.findAll({
         attributes: {exclude: ['createdAt', 'updatedAt']}
@@ -144,6 +152,41 @@ customers.get('/sales', async (req,res) => {
     res.status(200).json(foundSales);
 });
 
+=======
+//GETS all information needed for showing a table of deliveries by customers
+customers.get('/sales', async (req,res) => {
+    const foundSales = await Delivery.findAll({
+        attributes:['delivery_date'],
+        include: [
+            {model: Delivery_Detail, as: "delivery_details",attributes: ['quantity', 'total_price'],
+                include:[{model: Product, as: "product", attributes: ['product_name']},
+                         {model: Warehouse, as: "warehouse", attributes: ['warehouse_name', 'warehouse_state']},
+            ]},
+            {model: Customer, as: 'customer', attributes: ['customer_first_name', 'customer_last_name']}
+        ]
+    });
+    const tableData = [];
+    foundSales.forEach(delivery =>{
+        let entryObj = {};
+        entryObj.delivery_date = delivery.dataValues.delivery_date.toString().substring(0, 10);
+        entryObj.customer = `${delivery.dataValues.customer.customer_first_name} ${delivery.dataValues.customer.customer_last_name}`;
+        let ammountSpent = 0;
+        let allProducts = [];
+        delivery.dataValues.delivery_details.forEach(delivery_detail => {
+            ammountSpent += delivery_detail.dataValues.total_price;
+            let individualPrice = (delivery_detail.dataValues.total_price/delivery_detail.dataValues.quantity).toFixed(2);
+            allProducts.push(`${delivery_detail.dataValues.product.dataValues.product_name} (${delivery_detail.dataValues.quantity} at $${individualPrice} a piece) from ${delivery_detail.dataValues.warehouse.dataValues.warehouse_name}`);
+        });
+        entryObj.different_product_types = delivery.dataValues.delivery_details.length;
+        entryObj.total_spent  = `$ ${ammountSpent}`;
+        //make this as a list in the frontend
+        entryObj.delivery_information  = allProducts;
+        tableData.push(entryObj);
+    });
+    res.set('Access-Control-Allow-Origin', 'http://localhost:3000'); 
+    res.status(200).json(tableData);
+});
+>>>>>>> b312915ed09ab327c899e4ef47ddcbc2d4263b5a
 //GETS the information and analytics on one customer. Also will send over the needed data for a purchase form
 customers.get('/:id', async (req,res) => {
     try {
@@ -156,7 +199,7 @@ customers.get('/:id', async (req,res) => {
                     attributes:['delivery_date'],
                     include: {
                         model: Delivery_Detail, as: "delivery_details",attributes: ['quantity', 'total_price'],
-                            include:[{model: Product, as: "product",attributes: ['product_name']},
+                            include:[{model: Product, as: "product",attributes: ['product_name', 'product_category']},
                                      {model: Warehouse, as: "warehouse", attributes: ['warehouse_name', 'warehouse_state']},
                         ]}},
                 ]
@@ -224,11 +267,120 @@ customers.get('/:id', async (req,res) => {
             entry.delivery_information  = allProducts;
             purchasesTableInfo.push(entry);
         });
-        const sentData = {
-            showFormInfo   : showFormInfo,
-            associateTable : purchasesTableInfo,
-        };
 
+        //INFORMATION NEEDED FOR SALES TABLE: need all products present anywhere adn the sale price and amount present
+        //set up as so: {product_id : [product_name, amount]} 
+        const foundInventories = await Inventory.findAll({
+            attributes: ['current_stock_level'],
+            include: {model: Product, as:'product', attributes:['product_id', 'product_name'] }
+        });
+        purchaseFormData = {};
+        foundInventories.forEach(inventory => {
+            let product_id = inventory.dataValues.product.dataValues.product_id
+            if (Object.keys(purchaseFormData).includes(product_id.toString())){
+                //you already have the product add to the inventory
+                purchaseFormData[product_id][1] +=  inventory.dataValues.current_stock_level;
+            }else{   
+                //make a new inventory
+                purchaseFormData[product_id] = [inventory.dataValues.product.dataValues.product_name, inventory.dataValues.current_stock_level];
+            }
+        });
+
+        //REPORTING CARD INFORMATION
+        // total number of purchases, total money spend, favorite product type, warehouse nearest to them
+        let showAnalyticsInfo = {
+            list: {
+                total_purchases       : 0,
+                total_spent           : 0,
+                favorite_product_type : '',
+                nearest_warehouse     : '',
+            },
+            barData               : {}
+        };
+        //lets first compare coords and find the nearest warehouse
+        const allWarehouses = await Warehouse.findAll({
+            attributes: ['warehouse_city', 'warehouse_address', 'warehouse_state', 'warehouse_id', 'warehouse_name']
+        });
+        const geolocatedObj = await geocoder.geocode(foundCustomer.dataValues.customer_address);
+        let customerCoords = [geolocatedObj[0].latitude, geolocatedObj[0].longitude];
+        let currentClosestWarehouse = '';
+        let currentBestDistance = 0;
+        for (let i=0; i< allWarehouses.length; i++){
+            let geolocatedWarehouse = await geocoder.geocode(allWarehouses[i].dataValues.warehouse_address);
+            let warehouseCoords = [geolocatedWarehouse[0].latitude, geolocatedWarehouse[0].longitude];
+            let distance = calcCrowDistance(customerCoords[0], customerCoords[1], warehouseCoords[0], warehouseCoords[1]);
+            if (i === 0){
+                currentBestDistance = distance;
+                currentClosestWarehouse = allWarehouses[i].dataValues.warehouse_name;
+            }else if (currentBestDistance > distance ){
+                currentBestDistance = distance;
+            }
+        };
+        showAnalyticsInfo.list.nearest_warehouse = currentClosestWarehouse;
+        //Next lets look at their deliveries to find how much they have spent and the quantity purchased
+        let categoriesBought = {};
+        foundCustomer.dataValues.deliveries.forEach(delivery => {
+                delivery.dataValues.delivery_details.forEach(delivery_detail => {
+                        showAnalyticsInfo.list.total_purchases += delivery_detail.dataValues.quantity;
+                        showAnalyticsInfo.list.total_spent += delivery_detail.dataValues.total_price;
+                        if(categoriesBought[delivery_detail.dataValues.product.dataValues.product_category]){
+                            categoriesBought[delivery_detail.dataValues.product.dataValues.product_category] += delivery_detail.dataValues.quantity;
+                        }else{
+                            categoriesBought[delivery_detail.dataValues.product.dataValues.product_category] = delivery_detail.dataValues.quantity;
+                        }   
+                });
+        });
+        //quickly parse the money to two decimals
+        showAnalyticsInfo.list.total_spent = `$${showAnalyticsInfo.list.total_spent.toFixed(2)}`;
+        //lets find the largest category bought
+        //NOTE this doesnt handle ties yet
+        mostBoughtAmount = 0
+        mostBoughtCategory = '';
+        for (let i=0; i<Object.keys(categoriesBought).length; i++){
+            if(categoriesBought[Object.keys(categoriesBought)[i]] > mostBoughtAmount){
+                mostBoughtAmount = categoriesBought[i];
+                mostBoughtCategory = Object.keys(categoriesBought)[i];
+            }
+        };
+        showAnalyticsInfo.list.favorite_product_type = mostBoughtCategory;
+        //Now lets get the quantity of items bought the past 10 days for the bar graph
+        let tendaysAgoDate = new Date(new Date().setHours(0,0,0,0) - ((24*60*60*1000) * 10)); 
+        const allPurchasesPast10Days = await Delivery.findAll({
+            attributes: ['delivery_date', 'customer_id'],
+            include:{ model: Delivery_Detail, as: "delivery_details", attributes: ['quantity']},
+            where: {
+                delivery_date: {
+                    [Op.gte]: [tendaysAgoDate.toISOString()]
+                }
+            }
+        });
+        let barObj = {}
+        for (let i=0; i< 10; i++)
+        {
+            let date =  new Date(new Date().setHours(0,0,0,0) - ((24*60*60*1000)*i)).toString().substring(0, 10)
+            barObj[date] = 0
+        } 
+         //now we need to get only the ones with this specific product
+         allPurchasesPast10Days.forEach(delivery => {
+            if (delivery.dataValues.customer_id === parseInt(req.params.id)){
+                    //get the date of this delivery
+                    let wmd = delivery.dataValues.delivery_date.toString().substring(0, 10);
+                    //look at all the delivery details
+                    let quantityBought = 0;
+                    delivery.dataValues.delivery_details.forEach( delivery_detail => {
+                        quantityBought += delivery_detail.dataValues.quantity;
+                    });
+                    //now add quantity to your bar graph obj
+                    barObj[wmd] += quantityBought;
+            };
+        });
+        showAnalyticsInfo.barData = barObj;
+        const sentData = {
+            showFormInfo     : showFormInfo,
+            associateTable   : purchasesTableInfo,
+            purchaseFormData : purchaseFormData,
+            showAnalyticsInfo: showAnalyticsInfo
+        };
         res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
         res.status(200).json(sentData);
     } catch (err) {
@@ -237,6 +389,122 @@ customers.get('/:id', async (req,res) => {
         res.status(500).json(err)
     }
 });
+//This handles updating any individual customer
+customers.put('/:id', async(req,res) => {
+    //here you should do backend validation 
+    //NOTE: right now we have nothing even trying to handle picture insertions, we are just straight putting in the filename
+    //New Note: just have the filename disabled
+    const customerToUpdate = await Customer.findOne({
+        where:{
+            customer_id:req.params.id
+        }
+    });
+    await warehouseToUpdate.update(req.body);
+    await warehouseToUpdate.save()
+    res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+    res.status(201).json({message:'Your Edit Was Successful', id: req.params.id});
+});
+//this handles making a delivery by 
+customers.post('/:id', async (req,res) => {
+    try {
+        //TODO back end validation
+        let customer_id = parseInt(req.params.id);
+        let date = new Date();
+        //First make your main delivery ticket
+        const deliveryTicket = await Delivery.create({customer_id: customer_id, delivery_date : date});
+        //keep track of this resulting id for delivery details
+        const delivery_id = deliveryTicket.dataValues.delivery_id;
+        //lastly make a revenue tracker that you will use to give to the owner
+        let revenueMade = 0;
+        //first loop through the length of the body
+        // NOTE THE ARRAY METHOD FOREACH DOES NOT WORK WITH ASYNC. THIS HOWEVER DOES
+        await req.body.forEachAsync(async (product_type,i) => {
+            //start tracking our delivery detail info
+            let delivery_detailsObj = {
+                product_id : parseInt(product_type.product_id),
+                //this warehouse part needs to be modified in the future
+                warehouse_id : 0,
+                quantity : parseInt(product_type.amount),
+                total_price: 0,
+                delivery_id : delivery_id
+            }
+            //first lets go into the products table and get the total price
+            const foundProduct = await Product.findOne({
+                where: {product_id : parseInt(product_type.product_id)},
+                attributes: ['product_sale_price']
+            });
+            delivery_detailsObj.total_price = (foundProduct.dataValues.product_sale_price * parseInt(product_type.amount));
+            //first remove it from the inventory. Note: this could come from multiple warehouses if the purchase is too big
+            const foundInventories = await Inventory.findAll({
+                where: {product_id : product_type.product_id},
+                //sort to have the largest one come first 
+                order: [['current_stock_level', 'DESC']]
+            });
+            let purchaseAmount = parseInt(product_type.amount);
+            //RIGHT NOW ITS FIRST TAKING INVENTORY FROM THE INVENTORY WITH THE MOST. change to warehouse nearest to customer
+            let inventoryIndex = 0;
+            //when its a foreachasync cant pass through index
+            await foundInventories.forEachAsync(async (inventory) => {
+                //TODO this needs to change to an array of warehouse_ids
+                if (inventoryIndex === 0){delivery_detailsObj.warehouse_id = inventory.dataValues.warehouse_id};
+                inventoryIndex++;
+                //subtract from purchase amount
+                let inventoryStock = inventory.dataValues.current_stock_level;
+                //TODO for now the delivery detail only includes the first warehouse it takes from. need to change this
+                //either make a delivery details warehouse id an array or make multiple delivery details for one product. rn this could break
+                // other things if i do it that way so i wont
+                if (purchaseAmount === 0)
+                {
+                    //do nothing NOTE: can you break or continue here?
+                }
+                else if (purchaseAmount >= inventoryStock ){
+                    //if this is the case, delete the inventory stock and move on
+                    const deletedInventory = await Inventory.destroy({
+                        where: {inventory_id : inventory.dataValues.inventory_id}
+                    });
+                    //now make the purchase amount show its been subtracted
+                    purchaseAmount = (purchaseAmount - inventoryStock);
+                }else{
+                    //update inventory to remove the remainder
+                    const inventoryToUpdate = await Inventory.findOne({
+                        where:{
+                            inventory_id:inventory.dataValues.inventory_id
+                        }
+                    });
+                    let updatedStock = inventory.dataValues.current_stock_level - purchaseAmount;
+                    inventoryToUpdate.current_stock_level = updatedStock;
+                    await inventoryToUpdate.save();
+                    console.log(inventoryToUpdate)
+                }
+            });
+            //now we can add our delivery detail. NOTE: in the future you are either going to have to make multiple deliv_deets for
+            // each warehouse, or make warehouse id an array
+            console.log(delivery_detailsObj.warehouse_id);
+            const newDelivery_Detail = await Delivery_Detail.create({
+                product_id : delivery_detailsObj.product_id,
+                //this warehouse part needs to be modified in the future
+                warehouse_id : delivery_detailsObj.warehouse_id,
+                quantity : delivery_detailsObj.quantity,
+                total_price: delivery_detailsObj.total_price,
+                delivery_id : delivery_detailsObj.delivery_id
+            });
+            revenueMade += newDelivery_Detail.total_price
+        });
+        //Finally we add the revenue to the owner
+        const foundOwner = await Owner.findOne({where: {owner_id: 1}, attributes: ['owner_id','total_revenue']});
+        let newRevenue = foundOwner.dataValues.total_revenue + revenueMade;
+        foundOwner.total_revenue = newRevenue;
+        await foundOwner.save();
+        res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+        res.status(201).json({message:'Your Customer Purchase Simulation Was Successful'});
+    } catch (err) {
+        console.log(err)
+        res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+        res.status(500).json(err)
+    }
+});
+
+
 
 
 
