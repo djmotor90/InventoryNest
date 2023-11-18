@@ -263,9 +263,11 @@ customers.get('/:id', async (req,res) => {
         purchaseFormData = {};
         foundInventories.forEach(inventory => {
             let product_id = inventory.dataValues.product.dataValues.product_id
-            if (Object.keys(purchaseFormData).includes(product_id)){
+            if (Object.keys(purchaseFormData).includes(product_id.toString())){
+                //you already have the product add to the inventory
                 purchaseFormData[product_id][1] +=  inventory.dataValues.current_stock_level;
             }else{   
+                //make a new inventory
                 purchaseFormData[product_id] = [inventory.dataValues.product.dataValues.product_name, inventory.dataValues.current_stock_level]
             }
         });
@@ -315,7 +317,7 @@ customers.get('/:id', async (req,res) => {
                 });
         });
         //quickly parse the money to two decimals
-        showAnalyticsInfo.total_spent = `$${showAnalyticsInfo.list.total_spent.toFixed(2)}`;
+        showAnalyticsInfo.list.total_spent = `$${showAnalyticsInfo.list.total_spent.toFixed(2)}`;
         //lets find the largest category bought
         //NOTE this doesnt handle ties yet
         mostBoughtAmount = 0
