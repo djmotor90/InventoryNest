@@ -168,7 +168,7 @@ warehouses.get('/:id', async (req,res) => {
         let showAnalyticsInfo = {
             list: {
                 total_items_stored         : 0,
-                most_common_item_type      : 0,
+                most_common_item_type      : '',
                 total_deliveries           : 0,
                 nearest_5_customers        : ''
             },
@@ -193,34 +193,33 @@ warehouses.get('/:id', async (req,res) => {
             showAnalyticsInfo.list.nearest_5_customers = `${showAnalyticsInfo.list.nearest_5_customers}, ${sortedDistanceArray[i].customerName}` 
         };
         //Next lets look through the inventory and find the most common item type and the total number of items stored here
-        
-        /*
-        //Next lets look at their deliveries to find how much they have spent and the quantity purchased
-        let categoriesBought = {};
-        foundCustomer.dataValues.deliveries.forEach(delivery => {
-                delivery.dataValues.delivery_details.forEach(delivery_detail => {
-                        showAnalyticsInfo.list.total_purchases += delivery_detail.dataValues.quantity;
-                        showAnalyticsInfo.list.total_spent += delivery_detail.dataValues.total_price;
-                        if(categoriesBought[delivery_detail.dataValues.product.dataValues.product_category]){
-                            categoriesBought[delivery_detail.dataValues.product.dataValues.product_category] += delivery_detail.dataValues.quantity;
-                        }else{
-                            categoriesBought[delivery_detail.dataValues.product.dataValues.product_category] = delivery_detail.dataValues.quantity;
-                        }   
-                });
+        let categoriesStored = {};
+        foundWarehouse.dataValues.inventories.forEach(inventory => {
+            showAnalyticsInfo.list.total_items_stored += inventory.dataValues.current_stock_level;
+            if(categoriesStored[inventory.dataValues.product.dataValues.product_category]){
+                categoriesStored[inventory.dataValues.product.dataValues.product_category] += inventory.dataValues.current_stock_level;
+            }else{
+                categoriesStored[inventory.dataValues.product.dataValues.product_category] = inventory.dataValues.current_stock_level;
+            }  
         });
-        //quickly parse the money to two decimals
-        showAnalyticsInfo.list.total_spent = `$${showAnalyticsInfo.list.total_spent.toFixed(2)}`;
         //lets find the largest category bought
         //NOTE this doesnt handle ties yet
-        mostBoughtAmount = 0
-        mostBoughtCategory = '';
-        for (let i=0; i<Object.keys(categoriesBought).length; i++){
-            if(categoriesBought[Object.keys(categoriesBought)[i]] > mostBoughtAmount){
-                mostBoughtAmount = categoriesBought[i];
-                mostBoughtCategory = Object.keys(categoriesBought)[i];
+        /*mostStoredAmount = 0
+        mostStoredCategory = '';
+        for (let i=0; i<Object.keys(categoriesStored).length; i++){
+            if(categoriesStored[Object.keys(categoriesStored)[i]] > mostStoredAmount){
+                mostBoughtAmount = categoriesStored[i];
+                mostStoredCategory = Object.keys(categoriesStored)[i];
             }
         };
-        showAnalyticsInfo.list.favorite_product_type = mostBoughtCategory;
+        showAnalyticsInfo.list.most_common_item_type = mostStoredCategory;
+        //Now lets get the number of delivieries filfilled from this warehouse
+        //const allDeliveryDeets 
+        
+
+        /*
+        
+
         //Now lets get the quantity of items bought the past 10 days for the bar graph
         let tendaysAgoDate = new Date(new Date().setHours(0,0,0,0) - ((24*60*60*1000) * 10)); 
         const allPurchasesPast10Days = await Delivery.findAll({
