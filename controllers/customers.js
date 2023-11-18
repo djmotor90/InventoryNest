@@ -273,10 +273,12 @@ customers.get('/:id', async (req,res) => {
         //REPORTING CARD INFORMATION
         // total number of purchases, total money spend, favorite product type, warehouse nearest to them
         let showAnalyticsInfo = {
-            total_purchases       : 0,
-            total_spent           : 0,
-            favorite_product_type : '',
-            nearest_warehouse     : '',
+            list: {
+                total_purchases       : 0,
+                total_spent           : 0,
+                favorite_product_type : '',
+                nearest_warehouse     : '',
+            },
             barData               : {}
         };
         //lets first compare coords and find the nearest warehouse
@@ -298,13 +300,13 @@ customers.get('/:id', async (req,res) => {
                 currentBestDistance = distance;
             }
         };
-        showAnalyticsInfo.nearest_warehouse = currentClosestWarehouse;
+        showAnalyticsInfo.list.nearest_warehouse = currentClosestWarehouse;
         //Next lets look at their deliveries to find how much they have spent and the quantity purchased
         let categoriesBought = {};
         foundCustomer.dataValues.deliveries.forEach(delivery => {
                 delivery.dataValues.delivery_details.forEach(delivery_detail => {
-                        showAnalyticsInfo.total_purchases += delivery_detail.dataValues.quantity;
-                        showAnalyticsInfo.total_spent += delivery_detail.dataValues.total_price;
+                        showAnalyticsInfo.list.total_purchases += delivery_detail.dataValues.quantity;
+                        showAnalyticsInfo.list.total_spent += delivery_detail.dataValues.total_price;
                         if(categoriesBought[delivery_detail.dataValues.product.dataValues.product_category]){
                             categoriesBought[delivery_detail.dataValues.product.dataValues.product_category] += delivery_detail.dataValues.quantity;
                         }else{
@@ -313,7 +315,7 @@ customers.get('/:id', async (req,res) => {
                 });
         });
         //quickly parse the money to two decimals
-        showAnalyticsInfo.total_spent = `$${showAnalyticsInfo.total_spent.toFixed(2)}`;
+        showAnalyticsInfo.total_spent = `$${showAnalyticsInfo.list.total_spent.toFixed(2)}`;
         //lets find the largest category bought
         //NOTE this doesnt handle ties yet
         mostBoughtAmount = 0
@@ -324,7 +326,7 @@ customers.get('/:id', async (req,res) => {
                 mostBoughtCategory = Object.keys(categoriesBought)[i];
             }
         };
-        showAnalyticsInfo.favorite_product_type = mostBoughtCategory;
+        showAnalyticsInfo.list.favorite_product_type = mostBoughtCategory;
         //Now lets get the quantity of items bought the past 10 days for the bar graph
         let tendaysAgoDate = new Date(new Date().setHours(0,0,0,0) - ((24*60*60*1000) * 10)); 
         const allPurchasesPast10Days = await Delivery.findAll({
