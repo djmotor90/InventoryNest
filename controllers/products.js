@@ -9,10 +9,7 @@ const { Product, Inventory, Warehouse, Owner, Transfer, Delivery_Detail, Owner_P
 //STATIC ROUTES
 //Home route: simply needs to send over all table data to populate a table
 products.get('/', async (req,res) => {
-    // Show a table of all products, therefore need to send over all the data
-        //each table row will be a link, that will feed in the id 
-    // needed associations: none afaik 
-    //there will be querying functionality and sorting functionality, likely just do sort via bootstrap 
+    
     try {
         //search through the queries and find those which match a column name from the 
         const columnNames = Object.keys(Product.rawAttributes);
