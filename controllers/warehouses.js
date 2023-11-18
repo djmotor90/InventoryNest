@@ -111,7 +111,7 @@ warehouses.get('/:id', async (req,res) => {
             include:[
                 {model: Inventory, as: "inventories", attributes: {exclude: ['createdAt', 'updatedAt']},
                     include: {
-                        model: Product, as: "product", attributes: {exclude: ['createdAt', 'updatedAt', 'isSoftDeleted']}
+                        model: Product, as: "product", attributes: {exclude: ['createdAt', 'updatedAt', 'product_picture_filename', 'isSoftDeleted']}
                 }},
             ]
         });

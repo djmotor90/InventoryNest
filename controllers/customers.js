@@ -1,15 +1,18 @@
 //DEPENDENCIES
-const customers    = require('express').Router();
-const { response }  = require('express');
-const db            = require('../models');
+const customers            = require('express').Router();
+const { response }         = require('express');
+const db                   = require('../models');
 const { Customer, Delivery, Delivery_Detail, Product, Warehouse, Inventory } = db;
-const { Op }        = require('sequelize');
-const delivery_detail = require('../models/delivery_detail');
+const { Op }               = require('sequelize');
+//Personal Function dependencies for location work
+const { calcCrowDistance } = require('../locationFunctions.js');
+const nodeGeocoder         = require('node-geocoder');
+const warehouse = require('../models/warehouse.js');
+    //initializing the geocoder using my google free tier key
+const geocoder = nodeGeocoder({provider: 'google',apiKey: process.env.ADDRESS_API_KEY, formatter: null});
+//WE ARE USING FOREACH ASYNCHRONOUSLY WHEN WE BUY PRODUCTS, SO I MADE AN ASYNC FOREACH METHOD
+Array.prototype.forEachAsync = async function (fn) {for (let t of this) { await fn(t) }};
 
-//WE ARE USING FOREACH ASYNCHRONOUSLY WHEN WE BUY PRODUCTS, SO I MADE AN ASYNC FOREACH
-Array.prototype.forEachAsync = async function (fn) {
-    for (let t of this) { await fn(t) }
-}
 
 
 //Home page simly needs to show all entries in a table
@@ -182,7 +185,7 @@ customers.get('/:id', async (req,res) => {
                     attributes:['delivery_date'],
                     include: {
                         model: Delivery_Detail, as: "delivery_details",attributes: ['quantity', 'total_price'],
-                            include:[{model: Product, as: "product",attributes: ['product_name']},
+                            include:[{model: Product, as: "product",attributes: ['product_name', 'product_category']},
                                      {model: Warehouse, as: "warehouse", attributes: ['warehouse_name', 'warehouse_state']},
                         ]}},
                 ]
@@ -266,10 +269,99 @@ customers.get('/:id', async (req,res) => {
                 purchaseFormData[product_id] = [inventory.dataValues.product.dataValues.product_name, inventory.dataValues.current_stock_level]
             }
         });
+
+        //REPORTING CARD INFORMATION
+        // total number of purchases, total money spend, favorite product type, warehouse nearest to them
+        let showAnalyticsInfo = {
+            total_purchases       : 0,
+            total_spent           : 0,
+            favorite_product_type : '',
+            nearest_warehouse     : '',
+            barData               : {}
+        };
+        //lets first compare coords and find the nearest warehouse
+        const allWarehouses = await Warehouse.findAll({
+            attributes: ['warehouse_city', 'warehouse_address', 'warehouse_state', 'warehouse_id', 'warehouse_name']
+        });
+        const geolocatedObj = await geocoder.geocode(foundCustomer.dataValues.customer_address);
+        let customerCoords = [geolocatedObj[0].latitude, geolocatedObj[0].longitude];
+        let currentClosestWarehouse = '';
+        let currentBestDistance = 0;
+        for (let i=0; i< allWarehouses.length; i++){
+            let geolocatedWarehouse = await geocoder.geocode(allWarehouses[i].dataValues.warehouse_address);
+            let warehouseCoords = [geolocatedWarehouse[0].latitude, geolocatedWarehouse[0].longitude];
+            let distance = calcCrowDistance(customerCoords[0], customerCoords[1], warehouseCoords[0], warehouseCoords[1]);
+            if (i === 0){
+                currentBestDistance = distance;
+                currentClosestWarehouse = allWarehouses[i].dataValues.warehouse_name;
+            }else if (currentBestDistance > distance ){
+                currentBestDistance = distance;
+            }
+        };
+        showAnalyticsInfo.nearest_warehouse = currentClosestWarehouse;
+        //Next lets look at their deliveries to find how much they have spent and the quantity purchased
+        let categoriesBought = {};
+        foundCustomer.dataValues.deliveries.forEach(delivery => {
+                delivery.dataValues.delivery_details.forEach(delivery_detail => {
+                        showAnalyticsInfo.total_purchases += delivery_detail.dataValues.quantity;
+                        showAnalyticsInfo.total_spent += delivery_detail.dataValues.total_price;
+                        if(categoriesBought[delivery_detail.dataValues.product.dataValues.product_category]){
+                            categoriesBought[delivery_detail.dataValues.product.dataValues.product_category] += delivery_detail.dataValues.quantity;
+                        }else{
+                            categoriesBought[delivery_detail.dataValues.product.dataValues.product_category] = delivery_detail.dataValues.quantity;
+                        }   
+                });
+        });
+        //quickly parse the money to two decimals
+        showAnalyticsInfo.total_spent = `$${showAnalyticsInfo.total_spent.toFixed(2)}`;
+        //lets find the largest category bought
+        //NOTE this doesnt handle ties yet
+        mostBoughtAmount = 0
+        mostBoughtCategory = '';
+        for (let i=0; i<Object.keys(categoriesBought).length; i++){
+            if(categoriesBought[Object.keys(categoriesBought)[i]] > mostBoughtAmount){
+                mostBoughtAmount = categoriesBought[i];
+                mostBoughtCategory = Object.keys(categoriesBought)[i];
+            }
+        };
+        showAnalyticsInfo.favorite_product_type = mostBoughtCategory;
+        //Now lets get the quantity of items bought the past 10 days for the bar graph
+        let tendaysAgoDate = new Date(new Date().setHours(0,0,0,0) - ((24*60*60*1000) * 10)); 
+        const allPurchasesPast10Days = await Delivery.findAll({
+            attributes: ['delivery_date', 'customer_id'],
+            include:{ model: Delivery_Detail, as: "delivery_details", attributes: ['quantity']},
+            where: {
+                delivery_date: {
+                    [Op.gte]: [tendaysAgoDate.toISOString()]
+                }
+            }
+        });
+        let barObj = {}
+        for (let i=0; i< 10; i++)
+        {
+            let date =  new Date(new Date().setHours(0,0,0,0) - ((24*60*60*1000)*i)).toString().substring(0, 10)
+            barObj[date] = 0
+        } 
+         //now we need to get only the ones with this specific product
+         allPurchasesPast10Days.forEach(delivery => {
+            if (delivery.dataValues.customer_id === parseInt(req.params.id)){
+                    //get the date of this delivery
+                    let wmd = delivery.dataValues.delivery_date.toString().substring(0, 10);
+                    //look at all the delivery details
+                    let quantityBought = 0;
+                    delivery.dataValues.delivery_details.forEach( delivery_detail => {
+                        quantityBought += delivery_detail.dataValues.quantity;
+                    });
+                    //now add quantity to your bar graph obj
+                    barObj[wmd] += quantityBought;
+            };
+        });
+        showAnalyticsInfo.barData = barObj;
         const sentData = {
             showFormInfo     : showFormInfo,
             associateTable   : purchasesTableInfo,
-            purchaseFormData : purchaseFormData
+            purchaseFormData : purchaseFormData,
+            showAnalyticsInfo: showAnalyticsInfo
         };
         res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
         res.status(200).json(sentData);
@@ -283,6 +375,7 @@ customers.get('/:id', async (req,res) => {
 customers.put('/:id', async(req,res) => {
     //here you should do backend validation 
     //NOTE: right now we have nothing even trying to handle picture insertions, we are just straight putting in the filename
+    //New Note: just have the filename disabled
     const customerToUpdate = await Customer.findOne({
         where:{
             customer_id:req.params.id
