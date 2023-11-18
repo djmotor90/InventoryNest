@@ -44,8 +44,12 @@ jobs:
               "dialect": "${{ secrets.DB_DIALECT }}"
             }
           }' > config/config.json
-          # Create or overwrite .env file with PG_URI
+          # Create or overwrite .env file with environment variables
           echo "PG_URI=${{ secrets.PG_URI }}" > .env
+          echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}" >> .env
+          echo "AWS_SECRET_ACESS_KEY=${{ secrets.AWS_SECRET_ACESS_KEY }}" >> .env
+          echo "BUCKET_NAME=${{ secrets.BUCKET_NAME }}" >> .env
+          echo "ADDRESS_API_KEY=${{ secrets.ADDRESS_API_KEY }}" >> .env
           # Install dependencies and start the application
           npm install --only=prod
           pm2 reload InventoryNest || pm2 start server.js --name InventoryNest --watch
