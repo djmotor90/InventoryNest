@@ -38,10 +38,10 @@ customers.get('/', async (req,res) => {
             where: whereObject,
             attributes: {exclude: ['createdAt', 'updatedAt', 'customer_picture_filename', 'isSoftDeleted']}
         });
-        res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+        res.set('Access-Control-Allow-Origin', 'http://132.145.219.172:3000');
         res.status(200).json(foundCustomers);
     } catch (err) {
-        res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+        res.set('Access-Control-Allow-Origin', 'http://132.145.219.172:3000');
         res.status(500).json(err);
     };
 });
@@ -73,27 +73,27 @@ customers.post('/', async (req, res) => {
             {
                 try {
                     //TODO insert into AWS bucket if present
-                    res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+                    res.set('Access-Control-Allow-Origin', 'http://132.145.219.172:3000');
                     res.status(201). res.status(201).json({message:'totaladdsuccess' , id:customer_id});
                 } catch (error) {
                     //remove the pic filename
                     //const removeProductPictureResult = await Product.
                     //if it fails remove the file name from the db and define in the error response
-                    res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+                    res.set('Access-Control-Allow-Origin', 'http://132.145.219.172:3000');
                     res.status(201).json({message:'addsuccessnophoto' , id:customer_id});
                 }
             }
-            res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+            res.set('Access-Control-Allow-Origin', 'http://132.145.219.172:3000');
             res.status(201).json({message:'totaladdsuccess' , id:customer_id});
         } catch (err) {
             console.error(err);
-            res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+            res.set('Access-Control-Allow-Origin', 'http://132.145.219.172:3000');
             res.status(500).json(err);
         }
     } catch (err) {
         //do some err
         console.error(err);
-        res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+        res.set('Access-Control-Allow-Origin', 'http://132.145.219.172:3000');
         res.status(500).json(err);
     }
 });
@@ -136,7 +136,7 @@ customers.get('/new', async (req, res) => {
             formInfo[key] = value;
         }
     });
-    res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+    res.set('Access-Control-Allow-Origin', 'http://132.145.219.172:3000');
     res.status(200).json(formInfo);
 });
 //GETS all information needed for showing a table of deliveries by customers
@@ -169,7 +169,7 @@ customers.get('/sales', async (req,res) => {
         entryObj.delivery_information  = allProducts;
         tableData.push(entryObj);
     });
-    res.set('Access-Control-Allow-Origin', 'http://localhost:3000'); 
+    res.set('Access-Control-Allow-Origin', 'http://132.145.219.172:3000'); 
     res.status(200).json(tableData);
 });
 //GETS the information and analytics on one customer. Also will send over the needed data for a purchase form
@@ -366,11 +366,11 @@ customers.get('/:id', async (req,res) => {
             purchaseFormData : purchaseFormData,
             showAnalyticsInfo: showAnalyticsInfo
         };
-        res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+        res.set('Access-Control-Allow-Origin', 'http://132.145.219.172:3000');
         res.status(200).json(sentData);
     } catch (err) {
         console.log(err)
-        res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+        res.set('Access-Control-Allow-Origin', 'http://132.145.219.172:3000');
         res.status(500).json(err)
     }
 });
@@ -386,7 +386,7 @@ customers.put('/:id', async(req,res) => {
     });
     await warehouseToUpdate.update(req.body);
     await warehouseToUpdate.save()
-    res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+    res.set('Access-Control-Allow-Origin', 'http://132.145.219.172:3000');
     res.status(201).json({message:'Your Edit Was Successful', id: req.params.id});
 });
 //this handles making a delivery by 
@@ -480,11 +480,11 @@ customers.post('/:id', async (req,res) => {
         let newRevenue = foundOwner.dataValues.total_revenue + revenueMade;
         foundOwner.total_revenue = newRevenue;
         await foundOwner.save();
-        res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+        res.set('Access-Control-Allow-Origin', 'http://132.145.219.172:3000');
         res.status(201).json({message:'Your Customer Purchase Simulation Was Successful'});
     } catch (err) {
         console.log(err)
-        res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+        res.set('Access-Control-Allow-Origin', 'http://132.145.219.172:3000');
         res.status(500).json(err)
     }
 });

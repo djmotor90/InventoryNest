@@ -3,7 +3,7 @@ const express       = require('express');
 const app           = express();
 const { Sequelize } = require('sequelize');
 const { Op }        = require('sequelize');
-//Annie note: instead do indivudual res.set('Access-Control-Allow-Origin', 'http://localhost:3000'); for every route, works more consistently
+//Annie note: instead do indivudual res.set('Access-Control-Allow-Origin', 'http://132.145.219.172:3000'); for every route, works more consistently
 const cors          = require('cors');
 //database connection required on the landing page
 const db            = require('./models');
@@ -119,7 +119,7 @@ app.get('/', async (req, res) => {
             barInformation      : barObj,
             mapInformation      : wareHouseObj.rows
         }
-        res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+        res.set('Access-Control-Allow-Origin', 'http://132.145.219.172:3000');
         res.status(200).json(landingPageData);
     } catch (err) {
         //TODO eventually write in some error handles, also include some more trycatches above to control certain erros
@@ -135,7 +135,7 @@ try {
         where: {owner_id: 1},
         attributes: ['owner_first_name', 'owner_last_name']
     });
-    res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+    res.set('Access-Control-Allow-Origin', 'http://132.145.219.172:3000');
     res.status(200).json(ownerData);
 } catch (err) {
     console.log(err);
@@ -151,7 +151,7 @@ app.use('/reporting', require('./controllers/reporting.js'))
 
 //CATCHALL ROUTE
 app.get('*', (req,res) => {
-    res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+    res.set('Access-Control-Allow-Origin', 'http://132.145.219.172:3000');
     response.status(404).json({message: 'Page not found'});
 });
 
@@ -159,5 +159,5 @@ app.get('*', (req,res) => {
 
 // LISTEN
 app.listen(port, () => {
-    console.log(`InventoryNest app listening at http://localhost:${port}`);
+    console.log(`InventoryNest app listening at http://132.145.219.172:${port}`);
 });

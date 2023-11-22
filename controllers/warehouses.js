@@ -35,10 +35,10 @@ warehouses.get('/', async (req,res) => {
             where: whereObject,
             attributes: {exclude: ['createdAt', 'updatedAt', 'isSoftDeleted']}
         });
-        res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+        res.set('Access-Control-Allow-Origin', 'http://132.145.219.172:3000');
         res.status(200).json(foundProducts);
     } catch (err) {
-        res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+        res.set('Access-Control-Allow-Origin', 'http://132.145.219.172:3000');
         res.status(500).json(err);
     };
 });
@@ -49,12 +49,12 @@ warehouses.post('/', async (req, res) => {
         let sqlData = req.body;
         const newWarehouse = await Warehouse.create(sqlData);
         let warehouse_id =  newWarehouse.warehouse_id;
-        res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+        res.set('Access-Control-Allow-Origin', 'http://132.145.219.172:3000');
         res.status(201).json({message:'totaladdsuccess' , id: warehouse_id});
     } catch (err) {
         //do some err
         console.error(err);
-        res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+        res.set('Access-Control-Allow-Origin', 'http://132.145.219.172:3000');
         res.status(500).json(err);
     }
 });
@@ -97,7 +97,7 @@ warehouses.get('/new', async (req, res) => {
             formInfo[key] = value;
         }
     });
-    res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+    res.set('Access-Control-Allow-Origin', 'http://132.145.219.172:3000');
     res.status(200).json(formInfo);
 });
 //Get individual route: shows the information about a singular warehouse, allows you to transfer products between warehouses or purchase more 
@@ -259,11 +259,11 @@ warehouses.get('/:id', async (req,res) => {
             showAnalyticsInfo : showAnalyticsInfo
             //purchaseForm   : purchaseTransferForm
         };
-        res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+        res.set('Access-Control-Allow-Origin', 'http://132.145.219.172:3000');
         res.status(200).json(sentData);
     } catch (err) {
         console.log(err)
-        res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+        res.set('Access-Control-Allow-Origin', 'http://132.145.219.172:3000');
         res.status(500).json(err)
     }
 });
@@ -314,11 +314,11 @@ warehouses.get('/:id/edit', async (req,res) => {
                 value.push(foundWarehouse.dataValues[key]);
             }
         });
-        res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+        res.set('Access-Control-Allow-Origin', 'http://132.145.219.172:3000');
         res.status(200).json(formInfo);
     } catch (err) {
         console.log(err)
-        res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+        res.set('Access-Control-Allow-Origin', 'http://132.145.219.172:3000');
         res.status(500).json(err)
     }
 });
@@ -333,7 +333,7 @@ warehouses.put('/:id', async(req,res) => {
     });
     await warehouseToUpdate.update(req.body);
     await warehouseToUpdate.save()
-    res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+    res.set('Access-Control-Allow-Origin', 'http://132.145.219.172:3000');
     res.status(201).json({message:'Your Edit Was Successful', id: req.params.id});
 });
 warehouses.post('/:id', async(req,res) => {

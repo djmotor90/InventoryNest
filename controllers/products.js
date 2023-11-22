@@ -26,10 +26,10 @@ products.get('/', async (req,res) => {
             where: whereObject,
             attributes: {exclude: ['createdAt', 'updatedAt', 'product_picture_filename']}
         });
-        res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+        res.set('Access-Control-Allow-Origin', 'http://132.145.219.172:3000');
         res.status(200).json(foundProducts);
     } catch (err) {
-        res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+        res.set('Access-Control-Allow-Origin', 'http://132.145.219.172:3000');
         res.status(500).json(err);
     };
 });
@@ -59,27 +59,27 @@ products.post('/', async (req, res) => {
             {
                 try {
                     //TODO insert into AWS bucket if present
-                    res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+                    res.set('Access-Control-Allow-Origin', 'http://132.145.219.172:3000');
                     res.status(201). res.status(201).json({message:'totaladdsuccess' , id:product_id});
                 } catch (error) {
                     //remove the pic filename
                     //const removeProductPictureResult = await Product.
                     //if it fails remove the file name from the db and define in the error response
-                    res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+                    res.set('Access-Control-Allow-Origin', 'http://132.145.219.172:3000');
                     res.status(201).json({message:'addsuccessnophoto' , id:product_id});
                 }
             }
-            res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+            res.set('Access-Control-Allow-Origin', 'http://132.145.219.172:3000');
             res.status(201).json({message:'totaladdsuccess' , id:product_id});
         } catch (err) {
             console.error(err);
-            res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+            res.set('Access-Control-Allow-Origin', 'http://132.145.219.172:3000');
             res.status(500).json(err);
         }
     } catch (err) {
         //do some err
         console.error(err);
-        res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+        res.set('Access-Control-Allow-Origin', 'http://132.145.219.172:3000');
         res.status(500).json(err);
     }
 });
@@ -121,7 +121,7 @@ products.get('/new', async (req, res) => {
             formInfo[key] = value;
         }
     });
-    res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+    res.set('Access-Control-Allow-Origin', 'http://132.145.219.172:3000');
     res.status(200).json(formInfo);
 });
 //Singular Product form: needs to show all product information 
@@ -322,11 +322,11 @@ products.get('/:id', async (req,res) => {
             purchaseForm     : purchaseTransferForm,
             showAnalyticsInfo: showAnalyticsInfo
         };
-        res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+        res.set('Access-Control-Allow-Origin', 'http://132.145.219.172:3000');
         res.status(200).json(sentData);
     } catch (err) {
         console.log(err)
-        res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+        res.set('Access-Control-Allow-Origin', 'http://132.145.219.172:3000');
         res.status(500).json(err)
     }
 });
@@ -360,7 +360,7 @@ products.post('/:id', async (req,res) => {
                 }
                 catch (err){
                     console.error(err);
-                    res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+                    res.set('Access-Control-Allow-Origin', 'http://132.145.219.172:3000');
                     return  res.status(500).json('You have tried to buy something you cannot afford');
                 }
                 //then we check if the product already had an inventory associated with it in the warehouse
@@ -394,7 +394,7 @@ products.post('/:id', async (req,res) => {
                     quantity                  : req.body.amount,
                     product_price_at_the_time : price
                 });
-                res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+                res.set('Access-Control-Allow-Origin', 'http://132.145.219.172:3000');
                 res.status(201).json({message:'Your Purchase Was Successful'});
                 break;
             case 'transfer':
@@ -441,7 +441,7 @@ products.post('/:id', async (req,res) => {
                     transfer_date         : new Date().toISOString(),
                     transfer_amount       : parseInt(req.body.amount)
                 });
-                res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+                res.set('Access-Control-Allow-Origin', 'http://132.145.219.172:3000');
                 res.status(201).json({message:'Your Transfer Was Successful'});
                 break;
             default:
@@ -450,7 +450,7 @@ products.post('/:id', async (req,res) => {
         }
     } catch (err) {
         console.error(err);
-        res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+        res.set('Access-Control-Allow-Origin', 'http://132.145.219.172:3000');
         return  res.status(500).json('There was an error submitting this form');
     }
 
@@ -467,7 +467,7 @@ products.put('/:id', async(req,res) => {
     });
     await productToUpdate.update(req.body);
     await productToUpdate.save()
-    res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+    res.set('Access-Control-Allow-Origin', 'http://132.145.219.172:3000');
     res.status(201).json({message:'Your Edit Was Successful', id: req.params.id});
 });
 //Create the form for editing an entry, this is nearly identical to new but with the values populated
@@ -517,11 +517,11 @@ products.get('/:id/edit', async (req,res) => {
             }
             //Now we add in our preexitsting data
         });
-        res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+        res.set('Access-Control-Allow-Origin', 'http://132.145.219.172:3000');
         res.status(200).json(formInfo);
     } catch (err) {
         console.log(err)
-        res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+        res.set('Access-Control-Allow-Origin', 'http://132.145.219.172:3000');
         res.status(500).json(err)
     }
 });
@@ -536,12 +536,12 @@ products.delete('/:id', async(req,res) => {
         const deletedInventory = await Inventory.destroy({
             where: {product_id: req.params.id}
         })
-        res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+        res.set('Access-Control-Allow-Origin', 'http://132.145.219.172:3000');
         res.status(200).json({
             message: `successfully deleted ${deletedProduct} product(s), and deleted all associated inventories: ${deletedInventory}`
         });
     } catch (err) {
-        res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+        res.set('Access-Control-Allow-Origin', 'http://132.145.219.172:3000');
         res.status(500).json(err);  
     }
 });
