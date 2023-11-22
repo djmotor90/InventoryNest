@@ -20,10 +20,10 @@ router.get('/', async (req, res) => { // Change the path to '/owners'
     const foundOwners = await Owner.findAll({
       where: whereObject,
     });
-    res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+    res.set('Access-Control-Allow-Origin', 'http://132.145.219.172:3000');
     res.status(200).json(foundOwners);
   } catch (err) {
-    res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+    res.set('Access-Control-Allow-Origin', 'http://132.145.219.172:3000');
     res.status(500).json(err);
   }
 });
@@ -50,10 +50,10 @@ router.get('/products', async (req,res) => { // Change the path to '/products'
             where: whereObject,
         
         });
-        res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+        res.set('Access-Control-Allow-Origin', 'http://132.145.219.172:3000');
         res.status(200).json(foundProducts);
     } catch (err) {
-        res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+        res.set('Access-Control-Allow-Origin', 'http://132.145.219.172:3000');
         res.status(500).json(err);
     };
 });
@@ -75,10 +75,10 @@ router.get('/customers', async (req, res) => {
         where: whereObject,
       });
 
-      res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+      res.set('Access-Control-Allow-Origin', 'http://132.145.219.172:3000');
       res.status(200).json(foundCustomers);
     } catch (err) {
-      res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+      res.set('Access-Control-Allow-Origin', 'http://132.145.219.172:3000');
       res.status(500).json(err);
     }
   });
@@ -130,11 +130,11 @@ router.get('/customers', async (req, res) => {
             return indvCustomerObj.quantityPurchased > 0 ? indvCustomerObj : null;
         }).filter(Boolean); // Remove null values
 
-        res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+        res.set('Access-Control-Allow-Origin', 'http://132.145.219.172:3000');
         res.status(200).json(allPurchasesByCustomer);
     } catch (err) {
         console.error(err);
-        res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+        res.set('Access-Control-Allow-Origin', 'http://132.145.219.172:3000');
         res.status(500).json(err);
     }
 });
@@ -193,11 +193,11 @@ router.get('/warehouses', async (req, res) => {
           };
       });
 
-      res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+      res.set('Access-Control-Allow-Origin', 'http://132.145.219.172:3000');
       res.status(200).json(warehousesWithMetrics);
   } catch (err) {
       console.error(err);
-      res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+      res.set('Access-Control-Allow-Origin', 'http://132.145.219.172:3000');
       res.status(500).json(err);
   }
 });
@@ -210,14 +210,14 @@ router.get('/warehouses', async (req, res) => {
       const owner = await Owner.findByPk(ownerId);
   
       if (!owner) {
-        res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+        res.set('Access-Control-Allow-Origin', 'http://132.145.219.172:3000');
         return res.status(404).json({ message: 'Owner not found' });
       }
   
-      res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+      res.set('Access-Control-Allow-Origin', 'http://132.145.219.172:3000');
       res.status(200).json(owner);
     } catch (err) {
-      res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+      res.set('Access-Control-Allow-Origin', 'http://132.145.219.172:3000');
       res.status(500).json(err);
     }
   });
@@ -231,14 +231,14 @@ router.get('/warehouses', async (req, res) => {
       const product = await Product.findByPk(productId);
   
       if (!product) {
-        res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+        res.set('Access-Control-Allow-Origin', 'http://132.145.219.172:3000');
         return res.status(404).json({ message: 'Product not found' });
       }
   
-      res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+      res.set('Access-Control-Allow-Origin', 'http://132.145.219.172:3000');
       res.status(200).json(product);
     } catch (err) {
-      res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+      res.set('Access-Control-Allow-Origin', 'http://132.145.219.172:3000');
       res.status(500).json(err);
     }
   });
@@ -252,14 +252,14 @@ router.get('/warehouses', async (req, res) => {
       const customer = await Customer.findByPk(customerId);
   
       if (!customer) {
-        res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+        res.set('Access-Control-Allow-Origin', 'http://132.145.219.172:3000');
         return res.status(404).json({ message: 'Customer not found' });
       }
   
-      res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+      res.set('Access-Control-Allow-Origin', 'http://132.145.219.172:3000');
       res.status(200).json(customer);
     } catch (err) {
-      res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+      res.set('Access-Control-Allow-Origin', 'http://132.145.219.172:3000');
       res.status(500).json(err);
     }
   });
